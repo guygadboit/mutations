@@ -63,4 +63,24 @@ func main() {
 	var env Environment
 	env.Init(genomes[0], orfs, 716, 6)
 	env.Print()
+
+	env.Init(genomes[0], orfs, 718, 1)
+	env.Print()
+
+	var patterns = [][]byte{
+		[]byte("CGTCTC"),
+		[]byte("GAGACC"),
+		[]byte("GGTCTC"),
+		[]byte("GAGACG"),
+	}
+
+	var s Search
+
+	for s.Init(genomes[0], patterns); ; {
+		pos := s.Iter()
+		if s.End() {
+			break
+		}
+		fmt.Println(pos)
+	}
 }
