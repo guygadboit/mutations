@@ -58,5 +58,9 @@ loop:
 
 func main() {
 	genomes := LoadGenomes("./WH1-RaT.fasta")
-	fmt.Println(len(genomes), len(genomes[0]), len(genomes[1]))
+	orfs := LoadOrfs("./WH1.orfs")
+
+	var env Environment
+	env.Init(genomes[0], orfs, 716, 6)
+	env.Print()
 }

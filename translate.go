@@ -2,13 +2,13 @@ package main
 
 import (
 	"bufio"
-	//"fmt"
+	"errors"
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"strconv"
 	"strings"
-	"errors"
 )
 
 var CodonTable = map[string]byte{
@@ -137,7 +137,10 @@ loop:
 			log.Fatal("Parse error in ORFs")
 		}
 
-		end, err := strconv.Atoi(fields[0])
+		// ORFs seem to be conventionally 1-based
+		start -= 1
+
+		end, err := strconv.Atoi(fields[1])
 		if err != nil {
 			log.Fatal("Parse error in ORFs")
 		}
@@ -153,8 +156,8 @@ func (orfs Orfs) GetCodonOffset(pos int) (int, int, error) {
 	for i := 0; i < len(orfs); i++ {
 		orf := &orfs[i]
 		if pos >= orf.start && pos < orf.end {
-			orf_rel := pos - orf.start
-			return (orf_rel / 3) * 3, orf_rel % 3, nil
+			orfPos := pos - orf.start // pos relative to start of ORF
+			return orf.start + (orfPos/3)*3, orfPos % 3, nil
 		}
 	}
 	return 0, 0, errors.New("Not in ORF")
@@ -164,16 +167,55 @@ func (orfs Orfs) GetCodonOffset(pos int) (int, int, error) {
 // The "Environment" of a subsequence is the codon-aligned section that
 // completely contains it.
 type Environment struct {
-	start, end	int			// Indices into the original genome
-	env			[]byte		// The whole aligned section
-	offset		int			// The offset to the start of the subsequence
-	protein		[]byte		// Its translation 
+	start int // Index into the original genome
+	len   int // How many nts in the subsequence this represents
+
+	window  []byte // The whole aligned section
+	offset  int    // The offset to the start of the subsequence
+	protein []byte // Its translation
 }
 
-func (env *Environment) Init(genome []byte, start int, n int) {
-	env.start = start
-	env.end = start + n
+// rounded up to the nearest multiple of 3
+func ceil3(n int) int {
+	return n + 3 - n%3
+}
 
+func (env *Environment) Init(genome []byte,
+	orfs Orfs, pos int, n int) error {
+	env.start = pos
+	env.len = n
 
+	windowStart, codonOffset, err := orfs.GetCodonOffset(pos)
+	if err != nil {
+		return err
+	}
 
+	windowLen := ceil3(3 - codonOffset + n)
+	windowEnd := windowStart + windowLen
+
+	env.offset = codonOffset
+	env.window = genome[windowStart:windowEnd]
+
+	env.protein = make([]byte, windowLen)
+
+	for i := 0; i < windowEnd-windowStart; i += 3 {
+		aa := CodonTable[string(env.window[i:i+3])]
+		for j := 0; j < 3; j++ {
+			env.protein[i+j] = aa
+		}
+	}
+	return nil
+}
+
+func (env *Environment) Subsequence() []byte {
+	return env.window[env.offset : env.offset+env.len]
+}
+
+func (env *Environment) Protein() []byte {
+	return env.protein[env.offset : env.offset+env.len]
+}
+
+func (env *Environment) Print() {
+	fmt.Println(string(env.Subsequence()))
+	fmt.Println(string(env.Protein()))
 }
