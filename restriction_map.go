@@ -32,7 +32,7 @@ func getStickyEnd(genome Genome, pos int, site *ReSite) (string, error) {
 	Returns the number of segments the length of the longest one, and whether
 	the sticky ends are all unique
 */
-func FindMap(genome Genome) (int, int, bool) {
+func FindRestrictionMap(genome Genome) (int, int, bool) {
 	var s Search
 	prev, maxLength, count := 0, 0, 0
 	stickyEnds := make(map[string]int)

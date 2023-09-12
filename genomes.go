@@ -83,25 +83,5 @@ func (g Genome) Save(name, fname string) error {
 }
 
 func main() {
-	genomes := LoadGenomes("./BANAL-20-52.fasta")
-	fmt.Println(len(genomes), len(genomes[0]))
-	orfs := LoadOrfs("./BANAL-20-52.orfs")
-	b52 := genomes[0]
-
-	var env Environment
-	env.Init(b52, orfs, 716, 6)
-	env.Print()
-
-	nd := NewNucDistro(b52)
-	nd.Show()
-
-	count, maxLength, unique := FindMap(b52)
-	fmt.Println(count, maxLength, unique)
-
-	b52.Save("B52 Original", "NotMutated.fasta")
-
-	// 763 is how many silent muts there are between SC2 and B52
-	numMuts := MutateSilent(b52, orfs, nd, 763)
-	fmt.Println(numMuts, "mutations")
-	b52.Save("B52 Mutated", "Mutated.fasta")
+	Trials(10000)
 }
