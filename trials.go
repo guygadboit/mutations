@@ -15,9 +15,9 @@ func Trials(n int) int {
 	count, maxLength, unique := FindRestrictionMap(b52)
 	fmt.Printf("Original: %d, %d, %t\n", count, maxLength, unique)
 
-	reportProgress := func() {
-		fmt.Printf("Found %d/%d good mutants (%.2f%%)\n", good, n,
-			float64(good*100)/float64(n))
+	reportProgress := func(n int) {
+		fmt.Printf("Tested %d. Found %d/%d good mutants (%.2f%%)\n", n,
+			good, n, float64(good*100)/float64(n))
 	}
 
 	for i := 0; i < n; i++ {
@@ -31,10 +31,10 @@ func Trials(n int) int {
 		}
 
 		if i%100 == 0 {
-			reportProgress()
+			reportProgress(i)
 		}
 	}
 
-	reportProgress()
+	reportProgress(n)
 	return good
 }
