@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	// "time"
+	"time"
 )
 
 // Counts for each nucleotide in a genome
@@ -41,9 +41,9 @@ var RandGenerator *rand.Rand
 
 func GetRandGenerator() *rand.Rand {
 	if RandGenerator == nil {
-		// RandGenerator = rand.New(rand.NewSource(time.Now().UnixNano()))
+		RandGenerator = rand.New(rand.NewSource(time.Now().UnixNano()))
 		// For debugging use the same seed
-		RandGenerator = rand.New(rand.NewSource(2144))
+		// RandGenerator = rand.New(rand.NewSource(2144))
 	}
 	return RandGenerator
 }
