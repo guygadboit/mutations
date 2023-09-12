@@ -38,3 +38,21 @@ func Trials(fname, orfsName string, n int) int {
 	reportProgress(n)
 	return good
 }
+
+func main() {
+	n := 10000
+	genomes := []string{
+		"BANAL-20-236",
+		"BANAL-20-52",
+		"RaTG13",
+	}
+	counts := make([]int, len(genomes))
+
+	for i := 0; i < len(genomes); i++ {
+		counts[i] = Trials(genomes[i]+".fasta", genomes[i]+".orfs", n)
+	}
+
+	for i := 0; i < len(genomes); i++ {
+		fmt.Printf("%s: %d/%d\n", genomes[i], counts[i], n)
+	}
+}
