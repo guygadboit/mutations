@@ -9,12 +9,19 @@ import (
 	"strings"
 )
 
+type Genome []byte
+
 /*
 	Represents a collection of aligned genomes (usually two) with one genome
 	per row
 */
-type Genomes [][]byte
+type Genomes []Genome
 
+/*
+	Load genomes, which might be a fasta file containing a single genome, or
+	one containing a few of them in an alignment. Be a bit careful when working
+	with alignments since there may be '-' in there
+*/
 func LoadGenomes(fname string) Genomes {
 	ret := make(Genomes, 0, 2)
 
@@ -83,4 +90,18 @@ func main() {
 		}
 		fmt.Println(pos)
 	}
+
+	genomes = LoadGenomes("./BANAL-20-52.fasta")
+	fmt.Println(len(genomes), len(genomes[0]))
+	orfs = LoadOrfs("./BANAL-20-52.orfs")
+	b52 := genomes[0]
+
+	env.Init(b52, orfs, 716, 6)
+	env.Print()
+
+	nd := NewNucDistro(b52)
+	nd.Show()
+
+	fmt.Printf("%c\n", nd.Random())
+	fmt.Printf("%c\n", nd.Random())
 }

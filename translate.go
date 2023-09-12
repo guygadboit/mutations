@@ -151,7 +151,11 @@ loop:
 	return ret
 }
 
-// Return the start of the codon and where pos is in it
+/*
+	Return the start of the codon and where pos is in it. We just do a linear
+	search since there aren't usually that many ORFs and this is probably as
+	fast as anything else
+*/
 func (orfs Orfs) GetCodonOffset(pos int) (int, int, error) {
 	for i := 0; i < len(orfs); i++ {
 		orf := &orfs[i]
