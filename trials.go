@@ -4,9 +4,9 @@ import (
 	"fmt"
 )
 
-func Trials(n int) int {
-	genomes := LoadGenomes("./BANAL-20-52.fasta")
-	orfs := LoadOrfs("./BANAL-20-52.orfs")
+func Trials(fname, orfsName string, n int) int {
+	genomes := LoadGenomes(fname)
+	orfs := LoadOrfs(orfsName)
 	b52 := genomes[0]
 	nd := NewNucDistro(b52)
 	mutant := make(Genome, len(b52))

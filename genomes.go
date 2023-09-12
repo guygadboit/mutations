@@ -83,5 +83,5 @@ func (g Genome) Save(name, fname string) error {
 }
 
 func main() {
-	Trials(10000)
+	Trials("BANAL-20-52.fasta", "BANAL-20-52.orfs", 100)
 }
