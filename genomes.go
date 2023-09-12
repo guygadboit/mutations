@@ -51,7 +51,6 @@ loop:
 		if strings.HasPrefix(line, ">") {
 			if len(currentRow) > 0 {
 				ret = append(ret, currentRow)
-				fmt.Println("New row", len(ret))
 				currentRow = make([]byte, 0)
 			}
 			continue
@@ -63,41 +62,46 @@ loop:
 	return ret
 }
 
-func main() {
-	genomes := LoadGenomes("./WH1-RaT.fasta")
-	orfs := LoadOrfs("./WH1.orfs")
+func (g Genome) Save(name, fname string) error {
+	fd, err := os.Create(fname)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
 
-	var env Environment
-	env.Init(genomes[0], orfs, 716, 6)
-	env.Print()
+	fp := bufio.NewWriter(fd)
+	fmt.Fprintf(fp, ">%s\n", name)
 
-	env.Init(genomes[0], orfs, 718, 1)
-	env.Print()
-
-	var s Search
-
-	for s.Init(genomes[0], RE_SITES); ; {
-		pos, site := s.Iter()
-		if s.End() {
-			break
-		}
-		fmt.Println(pos, string(site.pattern))
+	var i int
+	for i = 0; i < len(g)-60; i += 60 {
+		fmt.Fprintf(fp, "%s\n", string(g[i:i+60]))
 	}
 
-	genomes = LoadGenomes("./BANAL-20-52.fasta")
+	fmt.Fprintf(fp, "%s\n", string(g[i:]))
+	fp.Flush()
+	return nil
+}
+
+func main() {
+	genomes := LoadGenomes("./BANAL-20-52.fasta")
 	fmt.Println(len(genomes), len(genomes[0]))
-	orfs = LoadOrfs("./BANAL-20-52.orfs")
+	orfs := LoadOrfs("./BANAL-20-52.orfs")
 	b52 := genomes[0]
 
+	var env Environment
 	env.Init(b52, orfs, 716, 6)
 	env.Print()
 
 	nd := NewNucDistro(b52)
 	nd.Show()
 
-	fmt.Printf("%c\n", nd.Random())
-	fmt.Printf("%c\n", nd.Random())
-
 	count, maxLength, unique := FindMap(b52)
 	fmt.Println(count, maxLength, unique)
+
+	b52.Save("B52 Original", "NotMutated.fasta")
+
+	// 763 is how many silent muts there are between SC2 and B52
+	numMuts := MutateSilent(b52, orfs, nd, 763)
+	fmt.Println(numMuts, "mutations")
+	b52.Save("B52 Mutated", "Mutated.fasta")
 }

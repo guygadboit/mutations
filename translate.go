@@ -184,6 +184,22 @@ func ceil3(n int) int {
 	return n + 3 - n%3
 }
 
+/*
+	Assume nts are codon aligned and return a translation, with one amino-acid
+	letter per nt, so something like LLLRRRIII
+*/
+func TranslateAligned(nts []byte) []byte {
+	ret := make([]byte, len(nts))
+
+	for i := 0; i < len(nts); i += 3 {
+		aa := CodonTable[string(nts[i:i+3])]
+		for j := 0; j < 3; j++ {
+			ret[i+j] = aa
+		}
+	}
+	return ret
+}
+
 func (env *Environment) Init(genome []byte,
 	orfs Orfs, pos int, n int) error {
 	env.start = pos
@@ -194,20 +210,12 @@ func (env *Environment) Init(genome []byte,
 		return err
 	}
 
-	windowLen := ceil3(3 - codonOffset + n)
+	windowLen := ceil3(codonOffset + n)
 	windowEnd := windowStart + windowLen
 
 	env.offset = codonOffset
 	env.window = genome[windowStart:windowEnd]
-
-	env.protein = make([]byte, windowLen)
-
-	for i := 0; i < windowEnd-windowStart; i += 3 {
-		aa := CodonTable[string(env.window[i:i+3])]
-		for j := 0; j < 3; j++ {
-			env.protein[i+j] = aa
-		}
-	}
+	env.protein = TranslateAligned(env.window)
 	return nil
 }
 
@@ -222,4 +230,35 @@ func (env *Environment) Protein() []byte {
 func (env *Environment) Print() {
 	fmt.Println(string(env.Subsequence()))
 	fmt.Println(string(env.Protein()))
+}
+
+/*
+	If we were to replace the subsequence this is the environment of, would
+	that be silent, and how many mutations would it contain?
+*/
+func (env *Environment) Replace(replacement []byte) (bool, int) {
+	altWindow := make([]byte, len(env.window))
+	copy(altWindow, env.window)
+	copy(altWindow[env.offset:env.offset+env.len], replacement)
+
+	protein := env.protein
+	altProtein := TranslateAligned(altWindow)
+
+	silent := true
+	for i := 0; i < len(protein); i += 3 {
+		if altProtein[i] != protein[i] {
+			silent = false
+			break
+		}
+	}
+
+	subseq := env.Subsequence()
+	differences := 0
+	for i := 0; i < env.len; i++ {
+		if replacement[i] != subseq[i] {
+			differences++
+		}
+	}
+
+	return silent, differences
 }

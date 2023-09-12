@@ -1,5 +1,9 @@
 package main
 
+import (
+	"errors"
+)
+
 type ReSite struct {
 	pattern     []byte
 	stickyStart int
@@ -11,6 +15,17 @@ var RE_SITES = []ReSite{
 	{[]byte("GAGACG"), -11, -7},
 	{[]byte("GGTCTC"), 1, 5},
 	{[]byte("GAGACC"), -11, -7},
+}
+
+func getStickyEnd(genome Genome, pos int, site *ReSite) (string, error) {
+	start := pos + site.stickyStart
+	end := pos + site.stickyEnd
+
+	if start < 0 || end > len(genome) {
+		return "", errors.New("Out of bounds")
+	}
+
+	return string(genome[start:end]), nil
 }
 
 /*
@@ -29,12 +44,14 @@ func FindMap(genome Genome) (int, int, bool) {
 			break
 		}
 
-		stickyEnd := string(genome[pos+site.stickyStart : pos+site.stickyEnd])
-		n, _ := stickyEnds[stickyEnd]
-		if n > 0 {
-			unique = false
+		stickyEnd, err := getStickyEnd(genome, pos, site)
+		if err == nil {
+			n, _ := stickyEnds[stickyEnd]
+			if n > 0 {
+				unique = false
+			}
+			stickyEnds[stickyEnd] = n + 1
 		}
-		stickyEnds[stickyEnd] = n + 1
 
 		count++
 		length := pos - prev
