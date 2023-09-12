@@ -74,21 +74,14 @@ func main() {
 	env.Init(genomes[0], orfs, 718, 1)
 	env.Print()
 
-	var patterns = [][]byte{
-		[]byte("CGTCTC"),
-		[]byte("GAGACC"),
-		[]byte("GGTCTC"),
-		[]byte("GAGACG"),
-	}
-
 	var s Search
 
-	for s.Init(genomes[0], patterns); ; {
-		pos := s.Iter()
+	for s.Init(genomes[0], RE_SITES); ; {
+		pos, site := s.Iter()
 		if s.End() {
 			break
 		}
-		fmt.Println(pos)
+		fmt.Println(pos, string(site.pattern))
 	}
 
 	genomes = LoadGenomes("./BANAL-20-52.fasta")
@@ -104,4 +97,7 @@ func main() {
 
 	fmt.Printf("%c\n", nd.Random())
 	fmt.Printf("%c\n", nd.Random())
+
+	count, maxLength, unique := FindMap(b52)
+	fmt.Println(count, maxLength, unique)
 }

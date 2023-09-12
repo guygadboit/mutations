@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	"time"
 	"math/rand"
+	"time"
 )
 
 // Counts for each nucleotide in a genome
 type NucDistro struct {
-	nts		map[byte]int
-	total	int
+	nts   map[byte]int
+	total int
 }
 
 func (nd *NucDistro) Count(g Genome) {
