@@ -15,12 +15,17 @@ type NucDistro struct {
 func (nd *NucDistro) Count(g *Genome) {
 	for i := 0; i < len(g.nts); i++ {
 		nt := g.nts[i]
+
+		switch nt {
+		case 'R':
+			fallthrough
+		case 'Y':
+			continue
+		}
+
 		count, _ := nd.nts[nt]
 		nd.nts[nt] = count + 1
-	}
-
-	for k := range nd.nts {
-		nd.total += nd.nts[k]
+		nd.total += 1
 	}
 }
 

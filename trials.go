@@ -50,7 +50,6 @@ func main() {
 	}
 
 	genomes := make([]*Genome, len(fnames))
-
 	for i := 0; i < len(fnames); i++ {
 		genomes[i] = LoadGenome(
 			fnames[i]+".fasta",
@@ -58,19 +57,18 @@ func main() {
 		)
 	}
 
-	counts := make([]int, len(genomes))
-
 	for i := 0; i < len(genomes); i++ {
 		nd.Count(genomes[i])
 	}
-
 	nd.Show()
 
+	results := make([]int, len(genomes))
+
 	for i := 0; i < len(genomes); i++ {
-		counts[i] = Trials(genomes[i], nd, nTrials)
+		results[i] = Trials(genomes[i], nd, nTrials)
 	}
 
 	for i := 0; i < len(genomes); i++ {
-		fmt.Printf("%s: %d/%d\n", fnames[i], counts[i], nTrials)
+		fmt.Printf("%s: %d/%d\n", fnames[i], results[i], nTrials)
 	}
 }
