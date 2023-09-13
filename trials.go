@@ -1,18 +1,14 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 )
 
-func Trials(fname, orfsName string, n int) int {
-	genomes := LoadGenomes(fname)
-	orfs := LoadOrfs(orfsName)
-	b52 := genomes[0]
-	nd := NewNucDistro(b52)
-	mutant := make(Genome, len(b52))
+func Trials(genome *Genome, nd *NucDistro, n int) int {
 	good := 0
 
-	count, maxLength, unique := FindRestrictionMap(b52)
+	count, maxLength, unique := FindRestrictionMap(genome)
 	fmt.Printf("Original: %d, %d, %t\n", count, maxLength, unique)
 
 	reportProgress := func(n int) {
@@ -21,8 +17,8 @@ func Trials(fname, orfsName string, n int) int {
 	}
 
 	for i := 0; i < n; i++ {
-		copy(mutant, b52)
-		MutateSilent(mutant, orfs, nd, 763)
+		mutant := genome.Clone()
+		MutateSilent(mutant, nd, 763)
 		count, maxLength, unique = FindRestrictionMap(mutant)
 
 		if unique && maxLength < 8000 {
@@ -40,19 +36,41 @@ func Trials(fname, orfsName string, n int) int {
 }
 
 func main() {
-	n := 10000
-	genomes := []string{
+	var nTrials int
+	flag.IntVar(&nTrials, "n", 10000, "Number of trials")
+	flag.Parse()
+
+	nd := NewNucDistro(nil)
+
+	fnames := []string{
+		"BtSY2",
 		"BANAL-20-236",
 		"BANAL-20-52",
 		"RaTG13",
 	}
+
+	genomes := make([]*Genome, len(fnames))
+
+	for i := 0; i < len(fnames); i++ {
+		genomes[i] = LoadGenome(
+			fnames[i]+".fasta",
+			fnames[i]+".orfs",
+		)
+	}
+
 	counts := make([]int, len(genomes))
 
 	for i := 0; i < len(genomes); i++ {
-		counts[i] = Trials(genomes[i]+".fasta", genomes[i]+".orfs", n)
+		nd.Count(genomes[i])
+	}
+
+	nd.Show()
+
+	for i := 0; i < len(genomes); i++ {
+		counts[i] = Trials(genomes[i], nd, nTrials)
 	}
 
 	for i := 0; i < len(genomes); i++ {
-		fmt.Printf("%s: %d/%d\n", genomes[i], counts[i], n)
+		fmt.Printf("%s: %d/%d\n", fnames[i], counts[i], nTrials)
 	}
 }

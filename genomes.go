@@ -9,21 +9,27 @@ import (
 	"strings"
 )
 
-type Genome []byte
+type Genome struct {
+	nts  []byte
+	orfs *Orfs
+}
 
 /*
 	Represents a collection of aligned genomes (usually two) with one genome
 	per row
 */
-type Genomes []Genome
+type Genomes struct {
+	nts  [][]byte
+	orfs *Orfs
+}
 
 /*
 	Load genomes, which might be a fasta file containing a single genome, or
 	one containing a few of them in an alignment. Be a bit careful when working
 	with alignments since there may be '-' in there
 */
-func LoadGenomes(fname string) Genomes {
-	ret := make(Genomes, 0, 2)
+func LoadGenomes(fname string, orfsName string) *Genomes {
+	ret := &Genomes{make([][]byte, 0), LoadOrfs(orfsName)}
 
 	fd, err := os.Open(fname)
 	if err != nil {
@@ -50,7 +56,7 @@ loop:
 
 		if strings.HasPrefix(line, ">") {
 			if len(currentRow) > 0 {
-				ret = append(ret, currentRow)
+				ret.nts = append(ret.nts, currentRow)
 				currentRow = make([]byte, 0)
 			}
 			continue
@@ -58,11 +64,16 @@ loop:
 
 		currentRow = append(currentRow, []byte(line)...)
 	}
-	ret = append(ret, currentRow)
+	ret.nts = append(ret.nts, currentRow)
 	return ret
 }
 
-func (g Genome) Save(name, fname string) error {
+func LoadGenome(fname string, orfsName string) *Genome {
+	genomes := LoadGenomes(fname, orfsName)
+	return &Genome{genomes.nts[0], genomes.orfs}
+}
+
+func (g *Genome) Save(name, fname string) error {
 	fd, err := os.Create(fname)
 	if err != nil {
 		return err
@@ -72,12 +83,19 @@ func (g Genome) Save(name, fname string) error {
 	fp := bufio.NewWriter(fd)
 	fmt.Fprintf(fp, ">%s\n", name)
 
+	ll := 60
 	var i int
-	for i = 0; i < len(g)-60; i += 60 {
-		fmt.Fprintf(fp, "%s\n", string(g[i:i+60]))
+	for i = 0; i < len(g.nts)-ll; i += ll {
+		fmt.Fprintf(fp, "%s\n", string(g.nts[i:i+ll]))
 	}
 
-	fmt.Fprintf(fp, "%s\n", string(g[i:]))
+	fmt.Fprintf(fp, "%s\n", string(g.nts[i:]))
 	fp.Flush()
 	return nil
+}
+
+func (g *Genome) Clone() *Genome {
+	ret := &Genome{make([]byte, len(g.nts)), g.orfs}
+	copy(ret.nts, g.nts)
+	return ret
 }

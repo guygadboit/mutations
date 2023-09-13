@@ -12,9 +12,9 @@ type NucDistro struct {
 	total int
 }
 
-func (nd *NucDistro) Count(g Genome) {
-	for i := 0; i < len(g); i++ {
-		nt := g[i]
+func (nd *NucDistro) Count(g *Genome) {
+	for i := 0; i < len(g.nts); i++ {
+		nt := g.nts[i]
 		count, _ := nd.nts[nt]
 		nd.nts[nt] = count + 1
 	}
@@ -24,15 +24,18 @@ func (nd *NucDistro) Count(g Genome) {
 	}
 }
 
-func NewNucDistro(g Genome) *NucDistro {
+func NewNucDistro(g *Genome) *NucDistro {
 	ret := NucDistro{nts: make(map[byte]int)}
-	ret.Count(g)
+	if g != nil {
+		ret.Count(g)
+	}
 	return &ret
 }
 
 func (nd *NucDistro) Show() {
 	for k := range nd.nts {
-		fmt.Printf("%c: %d\n", k, nd.nts[k])
+		fmt.Printf("%c: %d %.2f%%\n", k, nd.nts[k],
+			float64(100.0*nd.nts[k])/float64(nd.total))
 	}
 	fmt.Printf("Total: %d\n", nd.total)
 }

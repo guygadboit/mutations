@@ -106,7 +106,7 @@ type Orf struct {
 
 type Orfs []Orf
 
-func LoadOrfs(fname string) Orfs {
+func LoadOrfs(fname string) *Orfs {
 	ret := make(Orfs, 0)
 
 	fd, err := os.Open(fname)
@@ -148,7 +148,7 @@ loop:
 		ret = append(ret, Orf{start, end})
 	}
 
-	return ret
+	return &ret
 }
 
 /*
@@ -200,12 +200,12 @@ func TranslateAligned(nts []byte) []byte {
 	return ret
 }
 
-func (env *Environment) Init(genome []byte,
-	orfs Orfs, pos int, n int) error {
+func (env *Environment) Init(genome *Genome,
+	pos int, n int) error {
 	env.start = pos
 	env.len = n
 
-	windowStart, codonOffset, err := orfs.GetCodonOffset(pos)
+	windowStart, codonOffset, err := genome.orfs.GetCodonOffset(pos)
 	if err != nil {
 		return err
 	}
@@ -214,7 +214,7 @@ func (env *Environment) Init(genome []byte,
 	windowEnd := windowStart + windowLen
 
 	env.offset = codonOffset
-	env.window = genome[windowStart:windowEnd]
+	env.window = genome.nts[windowStart:windowEnd]
 	env.protein = TranslateAligned(env.window)
 	return nil
 }
