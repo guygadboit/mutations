@@ -21,6 +21,10 @@ func Trials(genome *Genomes, nd *NucDistro, numTrials int, numMuts int) int {
 		MutateSilent(mutant, nd, numMuts)
 		count, maxLength, unique = FindRestrictionMap(mutant)
 
+		mutant.Combine(genome)
+		sis := CountSilentInSites(mutant, RE_SITES, true)
+		sis.Show()
+
 		if unique && maxLength < 8000 {
 			fmt.Printf("Mutant %d: %d, %d, %t\n", i, count, maxLength, unique)
 			good += 1

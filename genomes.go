@@ -100,6 +100,16 @@ func (g *Genomes) Clone() *Genomes {
 }
 
 /*
+	Assuming align is aligned with g, add it to g's own nts array, just doing a
+	shallow copy
+*/
+func (g *Genomes) Combine(other *Genomes) {
+	for i := 0; i < other.NumGenomes(); i++ {
+		g.nts = append(g.nts, other.nts[i])
+	}
+}
+
+/*
 	These little functions make it a bit easier not to get confused about
 	which dimension is which.
 */
