@@ -69,6 +69,7 @@ func main() {
 	}
 
 	for i := 0; i < len(genomes); i++ {
-		fmt.Printf("%s: %d/%d\n", fnames[i], results[i], nTrials)
+		fmt.Printf("%s: %d/%d %.2f%%\n", fnames[i], results[i], nTrials,
+			float64(100.0 * results[i]) / float64(nTrials))
 	}
 }

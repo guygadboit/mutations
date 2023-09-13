@@ -99,3 +99,14 @@ func (g *Genome) Clone() *Genome {
 	copy(ret.nts, g.nts)
 	return ret
 }
+
+/*
+	Split a set of aligned genomes into individual ones, sharing the same ORFs
+*/
+func (g *Genomes) Split() []*Genome {
+	ret := make([]*Genome, len(g.nts))
+	for i := 0; i < len(g.nts); i++ {
+		ret = append(ret, &Genome{g.nts[i], g.orfs})
+	}
+	return ret
+}
