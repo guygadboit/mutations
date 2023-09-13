@@ -9,7 +9,7 @@ import (
 	"fmt"
 )
 
-type SilentInSites struct{
+type SilentInSites struct {
 	totalMuts, totalSites, totalSingleSites int
 }
 
@@ -46,7 +46,7 @@ func isSilent(genomes *Genomes, pos int, count int) bool {
 	only introduce silent mutations in the first place, so this saves time)
 */
 func CountSilentInSites(genomes *Genomes,
-	sites []ReSite, assumeSilent bool) (SilentInSites) {
+	sites []ReSite, assumeSilent bool) SilentInSites {
 	var ret SilentInSites
 	var s Search
 	m := len(sites[0].pattern)

@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	// "fmt"
+	//"fmt"
 )
 
 type ReSite struct {
@@ -13,9 +13,9 @@ type ReSite struct {
 }
 
 var RE_SITES = []ReSite{
-	{[]byte("CGTCTC"), 1, 5, false},
+	{[]byte("CGTCTC"), 7, 11, false},
 	{[]byte("GAGACG"), -5, -1, true},
-	{[]byte("GGTCTC"), 1, 5, false},
+	{[]byte("GGTCTC"), 7, 11, false},
 	{[]byte("GAGACC"), -5, -1, true},
 }
 
@@ -42,7 +42,7 @@ func getStickyEnd(genome *Genomes, pos int, site *ReSite) (string, error) {
 	}
 
 	/*
-	fmt.Printf("pos: %d %s sticky %d->%d reverse %t: %s\n", pos,
+		fmt.Printf("pos: %d %s sticky %d->%d reverse %t: %s\n", pos,
 		site.pattern, start, end, site.reverse, string(s))
 	*/
 
