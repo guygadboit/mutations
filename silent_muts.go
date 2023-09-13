@@ -5,8 +5,8 @@
 */
 package main
 
-type MutationScore interface{
-	Score(genomes *Genomes)	float64
+type MutationScore interface {
+	Score(genomes *Genomes) float64
 }
 
 /*
@@ -17,54 +17,45 @@ func countSites(genomes *Genomes, sites []ReSite) (int, int, int) {
 	var totalMuts, totalSites, totalSingleSites int
 	var s Search
 	m := len(sites[0].pattern)
-	individualGenomes := genomes.Split()
 
-	other := func(which int) int {
-		return (which + 1) % 2
-	}
+	for s.Init(genomes, sites); ; {
+		pos, _ := s.Iter()
+		if s.End() {
+			break
+		}
 
-	for i := 0; i < len(genomes.nts); i++ {
-		for s.Init(genomes.nts[i], sites); ; {
-			pos, _ := s.Iter()
-			if s.End() {
-				break
+		// First count how many muts
+		numMuts := 0
+		for k := 0; k < m; k++ {
+			if genomes.nts[0][pos+k] != genomes.nts[1][pos+k] {
+				numMuts++
 			}
+		}
 
-			j := other(i)
+		// Site is the same in both genomes. Not interested.
+		if numMuts == 0 {
+			continue
+		}
 
-			// First count how many muts
-			numMuts := 0
-			for k := 0; k < m; k++ {
-				if genomes.nts[i][pos+k] != genomes.nts[j][pos+k] {
-					numMuts++
-				}
+		// Now given that it is mutated, check that it's silent
+		var aEnv, bEnv Environment
+
+		aEnv.Init(genomes, pos, m, 0)
+		bEnv.Init(genomes, pos, m, 1)
+
+		iProt := aEnv.Protein()
+		jProt := bEnv.Protein()
+
+		for k := 0; k < m; k++ {
+			if iProt[k] != jProt[k] {
+				continue // Not silent -> not interested
 			}
+		}
 
-			// Site is the same in both genomes. Not interested.
-			if numMuts == 0 {
-				continue
-			}
-
-			// Now given that it is mutated, check that it's silent
-			var iEnv, jEnv Environment
-
-			iEnv.Init(individualGenomes[i], pos, m)
-			jEnv.Init(individualGenomes[j], pos, m)
-
-			iProt := iEnv.Protein()
-			jProt := iEnv.Protein()
-
-			for k := 0; k < m; k++ {
-				if iProt[k] != jProt[k] {
-					continue	// Not silent -> not interested
-				}
-			}
-
-			totalMuts += numMuts
-			totalSites++
-			if numMuts == 1 {
-				totalSingleSites++
-			}
+		totalMuts += numMuts
+		totalSites++
+		if numMuts == 1 {
+			totalSingleSites++
 		}
 	}
 	return totalMuts, totalSites, totalSingleSites

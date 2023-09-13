@@ -12,24 +12,26 @@ type NucDistro struct {
 	total int
 }
 
-func (nd *NucDistro) Count(g *Genome) {
-	for i := 0; i < len(g.nts); i++ {
-		nt := g.nts[i]
+func (nd *NucDistro) Count(g *Genomes) {
+	for i := 0; i < g.NumGenomes(); i++ {
+		for j := 0; j < g.Length(); j++ {
+			nt := g.nts[i][j]
 
-		switch nt {
-		case 'R':
-			fallthrough
-		case 'Y':
-			continue
+			switch nt {
+			case 'R':
+				fallthrough
+			case 'Y':
+				continue
+			}
+
+			count, _ := nd.nts[nt]
+			nd.nts[nt] = count + 1
+			nd.total += 1
 		}
-
-		count, _ := nd.nts[nt]
-		nd.nts[nt] = count + 1
-		nd.total += 1
 	}
 }
 
-func NewNucDistro(g *Genome) *NucDistro {
+func NewNucDistro(g *Genomes) *NucDistro {
 	ret := NucDistro{nts: make(map[byte]int)}
 	if g != nil {
 		ret.Count(g)

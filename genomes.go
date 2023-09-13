@@ -9,18 +9,18 @@ import (
 	"strings"
 )
 
-type Genome struct {
-	nts  []byte
-	orfs *Orfs
-}
-
 /*
 	Represents a collection of aligned genomes (usually two) with one genome
-	per row
+	per row. The orfs "belong" to the first one in the set. We also use this
+	for a single genome.
 */
 type Genomes struct {
 	nts  [][]byte
 	orfs *Orfs
+}
+
+func NewGenomes(orfs *Orfs, numGenomes int) *Genomes {
+	return &Genomes{make([][]byte, numGenomes), orfs}
 }
 
 /*
@@ -29,7 +29,7 @@ type Genomes struct {
 	with alignments since there may be '-' in there
 */
 func LoadGenomes(fname string, orfsName string) *Genomes {
-	ret := &Genomes{make([][]byte, 0), LoadOrfs(orfsName)}
+	ret := NewGenomes(LoadOrfs(orfsName), 0)
 
 	fd, err := os.Open(fname)
 	if err != nil {
@@ -68,12 +68,7 @@ loop:
 	return ret
 }
 
-func LoadGenome(fname string, orfsName string) *Genome {
-	genomes := LoadGenomes(fname, orfsName)
-	return &Genome{genomes.nts[0], genomes.orfs}
-}
-
-func (g *Genome) Save(name, fname string) error {
+func (g *Genomes) Save(name, fname string, which int) error {
 	fd, err := os.Create(fname)
 	if err != nil {
 		return err
@@ -83,30 +78,35 @@ func (g *Genome) Save(name, fname string) error {
 	fp := bufio.NewWriter(fd)
 	fmt.Fprintf(fp, ">%s\n", name)
 
+	nts := g.nts[which]
 	ll := 60
 	var i int
-	for i = 0; i < len(g.nts)-ll; i += ll {
-		fmt.Fprintf(fp, "%s\n", string(g.nts[i:i+ll]))
+	for i = 0; i < len(nts)-ll; i += ll {
+		fmt.Fprintf(fp, "%s\n", string(nts[i:i+ll]))
 	}
 
-	fmt.Fprintf(fp, "%s\n", string(g.nts[i:]))
+	fmt.Fprintf(fp, "%s\n", string(nts[i:]))
 	fp.Flush()
 	return nil
 }
 
-func (g *Genome) Clone() *Genome {
-	ret := &Genome{make([]byte, len(g.nts)), g.orfs}
-	copy(ret.nts, g.nts)
+func (g *Genomes) Clone() *Genomes {
+	ret := NewGenomes(g.orfs, g.NumGenomes())
+	for i := 0; i < len(g.nts); i++ {
+		ret.nts[i] = make([]byte, len(g.nts[i]))
+		copy(ret.nts[i], g.nts[i])
+	}
 	return ret
 }
 
 /*
-	Split a set of aligned genomes into individual ones, sharing the same ORFs
+	These little functions make it a bit easier not to get confused about
+	which dimension is which.
 */
-func (g *Genomes) Split() []*Genome {
-	ret := make([]*Genome, len(g.nts))
-	for i := 0; i < len(g.nts); i++ {
-		ret = append(ret, &Genome{g.nts[i], g.orfs})
-	}
-	return ret
+func (g *Genomes) NumGenomes() int {
+	return len(g.nts)
+}
+
+func (g *Genomes) Length() int {
+	return len(g.nts[0])
 }

@@ -17,28 +17,28 @@ var RE_SITES = []ReSite{
 	{[]byte("GAGACC"), -11, -7},
 }
 
-func getStickyEnd(genome *Genome, pos int, site *ReSite) (string, error) {
+func getStickyEnd(genome *Genomes, pos int, site *ReSite) (string, error) {
 	start := pos + site.stickyStart
 	end := pos + site.stickyEnd
 
-	if start < 0 || end > len(genome.nts) {
+	if start < 0 || end > genome.Length() {
 		return "", errors.New("Out of bounds")
 	}
 
-	return string(genome.nts[start:end]), nil
+	return string(genome.nts[0][start:end]), nil
 }
 
 /*
 	Returns the number of segments the length of the longest one, and whether
 	the sticky ends are all unique
 */
-func FindRestrictionMap(genome *Genome) (int, int, bool) {
+func FindRestrictionMap(genome *Genomes) (int, int, bool) {
 	var s Search
 	prev, maxLength, count := 0, 0, 0
 	stickyEnds := make(map[string]int)
 	unique := true
 
-	for s.Init(genome.nts, RE_SITES); ; {
+	for s.Init(genome, RE_SITES); ; {
 		pos, site := s.Iter()
 		if s.End() {
 			break
@@ -62,7 +62,7 @@ func FindRestrictionMap(genome *Genome) (int, int, bool) {
 	}
 
 	// One more segment from last position found to the end
-	length := len(genome.nts) - prev
+	length := genome.Length() - prev
 	if length > maxLength {
 		maxLength = length
 	}

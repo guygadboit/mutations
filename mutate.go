@@ -1,13 +1,14 @@
 package main
 
 /*
-	Introduce num silent mutations into genome, selecting nts randomly from
-	nucDist. Return the number of mutations
+	Introduce num silent mutations into genome (the first one), selecting nts
+	randomly from nucDist. Return the number of mutations
 */
-func MutateSilent(genome *Genome, nucDist *NucDistro, num int) int {
+func MutateSilent(genome *Genomes, nucDist *NucDistro, num int) int {
 	randGenerator := GetRandGenerator()
 	numMuts := 0
 	alreadyDone := make(map[int]int)
+	nts := genome.nts[0]
 
 	// Try to mutate silently at pos. Return true if we succeeded.
 	tryMutate := func(pos int) bool {
@@ -17,13 +18,13 @@ func MutateSilent(genome *Genome, nucDist *NucDistro, num int) int {
 		}
 
 		var env Environment
-		err := env.Init(genome, pos, 1)
+		err := env.Init(genome, pos, 1, 0)
 		if err != nil {
 			// You get an error if pos is not in an ORF
 			return false
 		}
 
-		existing := genome.nts[pos]
+		existing := nts[pos]
 		var replacement byte
 		for {
 			replacement = nucDist.Random()
@@ -34,7 +35,7 @@ func MutateSilent(genome *Genome, nucDist *NucDistro, num int) int {
 
 		silent, _ := env.Replace([]byte{replacement})
 		if silent {
-			genome.nts[pos] = replacement
+			nts[pos] = replacement
 			alreadyDone[pos] = 1
 			numMuts++
 		}
@@ -43,9 +44,9 @@ func MutateSilent(genome *Genome, nucDist *NucDistro, num int) int {
 
 mutations:
 	for i := 0; i < num; {
-		start := randGenerator.Intn(len(genome.nts))
+		start := randGenerator.Intn(genome.Length())
 
-		for j := start; j < len(genome.nts); j++ {
+		for j := start; j < genome.Length(); j++ {
 			if tryMutate(j) {
 				i++
 				continue mutations

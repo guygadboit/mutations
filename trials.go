@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func Trials(genome *Genome, nd *NucDistro, numTrials int, numMuts int) int {
+func Trials(genome *Genomes, nd *NucDistro, numTrials int, numMuts int) int {
 	good := 0
 
 	count, maxLength, unique := FindRestrictionMap(genome)
@@ -50,9 +50,9 @@ func main() {
 		"RaTG13",
 	}
 
-	genomes := make([]*Genome, len(fnames))
+	genomes := make([]*Genomes, len(fnames))
 	for i := 0; i < len(fnames); i++ {
-		genomes[i] = LoadGenome(
+		genomes[i] = LoadGenomes(
 			fnames[i]+".fasta",
 			fnames[i]+".orfs",
 		)
@@ -71,6 +71,6 @@ func main() {
 
 	for i := 0; i < len(genomes); i++ {
 		fmt.Printf("%s: %d/%d %.2f%%\n", fnames[i], results[i], nTrials,
-			float64(100.0 * results[i]) / float64(nTrials))
+			float64(100.0*results[i])/float64(nTrials))
 	}
 }

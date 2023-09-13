@@ -200,8 +200,8 @@ func TranslateAligned(nts []byte) []byte {
 	return ret
 }
 
-func (env *Environment) Init(genome *Genome,
-	pos int, n int) error {
+func (env *Environment) Init(genome *Genomes,
+	pos int, n int, which int) error {
 	env.start = pos
 	env.len = n
 
@@ -214,7 +214,7 @@ func (env *Environment) Init(genome *Genome,
 	windowEnd := windowStart + windowLen
 
 	env.offset = codonOffset
-	env.window = genome.nts[windowStart:windowEnd]
+	env.window = genome.nts[which][windowStart:windowEnd]
 	env.protein = TranslateAligned(env.window)
 	return nil
 }

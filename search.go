@@ -5,31 +5,36 @@ import (
 )
 
 type Search struct {
-	nts     []byte
+	genomes *Genomes
 	reSites []ReSite
 	i       int
 }
 
-func (s *Search) Init(nts []byte, reSites []ReSite) {
-	s.nts = nts
+func (s *Search) Init(genomes *Genomes, reSites []ReSite) {
+	s.genomes = genomes
 	s.reSites = reSites
 	s.i = 0
 }
 
 /*
-	Returns the position in the nts and the ReSite that matched
+	Returns the position in the nts and the ReSite that matched. If there are
+	multiple genomes we look for matches in any of them.
 */
 func (s *Search) Iter() (int, *ReSite) {
-	n := len(s.nts)
+	genomes := s.genomes
+	nts := s.genomes.nts
+	n := genomes.Length()
 	m := len(s.reSites[0].pattern)
 
 	for ; s.i < n-m; s.i++ {
 		for j := 0; j < len(s.reSites); j++ {
 			site := &s.reSites[j]
-			if reflect.DeepEqual(s.nts[s.i:s.i+m], site.pattern) {
-				retVal := s.i
-				s.i++
-				return retVal, site
+			for k := 0; k < genomes.NumGenomes(); k++ {
+				if reflect.DeepEqual(nts[k][s.i:s.i+m], site.pattern) {
+					retVal := s.i
+					s.i++
+					return retVal, site
+				}
 			}
 		}
 	}
@@ -39,5 +44,5 @@ func (s *Search) Iter() (int, *ReSite) {
 }
 
 func (s *Search) End() bool {
-	return s.i == len(s.nts)
+	return s.i == s.genomes.Length()
 }
