@@ -11,15 +11,16 @@ import (
 
 func WriteHeadings(results io.Writer) {
 	fmt.Fprintln(results, "name count max_length unique acceptable"+
-		" muts_in_sites total_sites total_singles")
+		" interleaved muts_in_sites total_sites total_singles")
 }
 
 func Trials(genome *Genomes, nd *NucDistro,
 	numTrials int, numMuts int, countSites bool, results io.Writer) int {
 	good := 0
 
-	count, maxLength, unique := FindRestrictionMap(genome)
-	fmt.Printf("Original: %d, %d, %t\n", count, maxLength, unique)
+	count, maxLength, unique, interleaved := FindRestrictionMap(genome)
+	fmt.Printf("Original: %d, %d, %t, %t\n", count,
+		maxLength, unique, interleaved)
 
 	reportProgress := func(n int) {
 		fmt.Printf("Tested %d. Found %d/%d good mutants (%.2f%%)\n", n,
@@ -29,13 +30,14 @@ func Trials(genome *Genomes, nd *NucDistro,
 	for i := 0; i < numTrials; i++ {
 		mutant := genome.Clone()
 		MutateSilent(mutant, nd, numMuts)
-		count, maxLength, unique = FindRestrictionMap(mutant)
+		count, maxLength, unique, interleaved = FindRestrictionMap(mutant)
 
 		mutant.Combine(genome)
 
 		acceptable := unique && maxLength < 8000
 		if acceptable {
-			fmt.Printf("Mutant %d: %d, %d, %t\n", i, count, maxLength, unique)
+			fmt.Printf("Mutant %d: %d, %d, %t, %t\n", i, count,
+				maxLength, unique, interleaved)
 			good += 1
 		}
 
@@ -44,7 +46,7 @@ func Trials(genome *Genomes, nd *NucDistro,
 			sis = CountSilentInSites(mutant, RE_SITES, true)
 		}
 		fmt.Fprintln(results, genome.names[0], count,
-			maxLength, unique, acceptable,
+			maxLength, unique, acceptable, interleaved,
 			sis.totalMuts, sis.totalSites, sis.totalSites)
 
 		if i%100 == 0 {

@@ -5,18 +5,24 @@ import (
 	//"fmt"
 )
 
+const (
+	BSAI  = 1
+	BSMBI = 2
+)
+
 type ReSite struct {
 	pattern     []byte
 	stickyStart int
 	stickyEnd   int  // I mean the end of the sticky end
 	reverse     bool // Whether the sticky end needs to be reversed
+	typ         int
 }
 
 var RE_SITES = []ReSite{
-	{[]byte("CGTCTC"), 7, 11, false},
-	{[]byte("GAGACG"), -5, -1, true},
-	{[]byte("GGTCTC"), 7, 11, false},
-	{[]byte("GAGACC"), -5, -1, true},
+	{[]byte("GGTCTC"), 7, 11, false, BSAI},
+	{[]byte("GAGACC"), -5, -1, true, BSAI},
+	{[]byte("CGTCTC"), 7, 11, false, BSMBI},
+	{[]byte("GAGACG"), -5, -1, true, BSMBI},
 }
 
 func reverse(b []byte) []byte {
@@ -50,19 +56,35 @@ func getStickyEnd(genome *Genomes, pos int, site *ReSite) (string, error) {
 }
 
 /*
-	Returns the number of segments the length of the longest one, and whether
-	the sticky ends are all unique
+	Returns the number of segments the length of the longest one, whether
+	the sticky ends are all unique, and whether there is interleaving
 */
-func FindRestrictionMap(genome *Genomes) (int, int, bool) {
+func FindRestrictionMap(genome *Genomes) (int, int, bool, bool) {
 	var s Search
 	prev, maxLength, count := 0, 0, 0
 	stickyEnds := make(map[string]int)
 	unique := true
+	interleaved := false
+	// The previous type and how many types we changed type
+	var typ, prevType, typeChanged int
 
 	for s.Init(genome, RE_SITES); ; {
 		pos, site := s.Iter()
 		if s.End() {
 			break
+		}
+
+		typ = site.typ
+		if typ != prevType {
+			typeChanged++
+		}
+		prevType = typ
+
+		// We change the type from nothing to the first type we see. Then again
+		// to the other type. After that changing it back again means we're
+		// interleaved.
+		if typeChanged > 2 {
+			interleaved = true
 		}
 
 		stickyEnd, err := getStickyEnd(genome, pos, site)
@@ -89,5 +111,5 @@ func FindRestrictionMap(genome *Genomes) (int, int, bool) {
 	}
 	count++
 
-	return count, maxLength, unique
+	return count, maxLength, unique, interleaved
 }

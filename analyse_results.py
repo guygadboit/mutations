@@ -57,20 +57,23 @@ def make_graph_files(results):
 					print(result.count, result.max_length, file=fp)
 
 
-def rates(results, max_count=None):
-	good, total = 0, 0
+def rates(results, max_count=None, require_not_interleaved=False):
 	for k, v in results.items():
+		good, total = 0, 0
 		for result in v:
 			acceptable = result.acceptable
 
 			if max_count is not None:
 				acceptable = acceptable and result.count <= max_count
 
+			if require_not_interleaved:
+				acceptable = acceptable and not result.interleaved
+
 			if acceptable:
 				good += 1
 			total += 1
 
-		print("{}: {}/{} {}%".format(k, good,
+		print("{}: {}/{} {:.2f}%".format(k, good,
 			total, float(good * 100) / total))
 
 
@@ -79,8 +82,9 @@ def main():
 	ap.add_argument("fname", nargs=1)
 	ap.add_argument("-s", "--silent-counts", action="store_true")
 	ap.add_argument("-g", "--graph", action="store_true")
-	ap.add_argument("-r", "--rates", action="store_true")
+	ap.add_argument("-r", "--rates", action="store_true", default=True)
 	ap.add_argument("-m", "--max-count", type=int)
+	ap.add_argument("-i", "--require-not-interleaved", action="store_true")
 
 	args = ap.parse_args()
 	results = parse_all_results(args.fname[0])
@@ -94,8 +98,8 @@ def main():
 	if args.rates:
 		rates(results)
 
-	if args.max_count:
-		rates(results, args.max_count)
+	if args.max_count or args.require_not_interleaved:
+		rates(results, args.max_count, args.require_not_interleaved)
 
 if __name__ == "__main__":
 	main()
