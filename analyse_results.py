@@ -56,11 +56,31 @@ def make_graph_files(results):
 					fp = true_fp if result.acceptable else false_fp
 					print(result.count, result.max_length, file=fp)
 
+
+def rates(results, max_count=None):
+	good, total = 0, 0
+	for k, v in results.items():
+		for result in v:
+			acceptable = result.acceptable
+
+			if max_count is not None:
+				acceptable = acceptable and result.count <= max_count
+
+			if acceptable:
+				good += 1
+			total += 1
+
+		print("{}: {}/{} {}%".format(k, good,
+			total, float(good * 100) / total))
+
+
 def main():
 	ap = ArgumentParser()
 	ap.add_argument("fname", nargs=1)
 	ap.add_argument("-s", "--silent-counts", action="store_true")
 	ap.add_argument("-g", "--graph", action="store_true")
+	ap.add_argument("-r", "--rates", action="store_true")
+	ap.add_argument("-m", "--max-count", type=int)
 
 	args = ap.parse_args()
 	results = parse_all_results(args.fname[0])
@@ -70,6 +90,12 @@ def main():
 
 	if args.graph:
 		make_graph_files(results)
+
+	if args.rates:
+		rates(results)
+
+	if args.max_count:
+		rates(results, args.max_count)
 
 if __name__ == "__main__":
 	main()
