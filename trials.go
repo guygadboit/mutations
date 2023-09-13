@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func Trials(genome *Genome, nd *NucDistro, n int) int {
+func Trials(genome *Genome, nd *NucDistro, numTrials int, numMuts int) int {
 	good := 0
 
 	count, maxLength, unique := FindRestrictionMap(genome)
@@ -16,9 +16,9 @@ func Trials(genome *Genome, nd *NucDistro, n int) int {
 			good, n, float64(good*100)/float64(n))
 	}
 
-	for i := 0; i < n; i++ {
+	for i := 0; i < numTrials; i++ {
 		mutant := genome.Clone()
-		MutateSilent(mutant, nd, 763)
+		MutateSilent(mutant, nd, numMuts)
 		count, maxLength, unique = FindRestrictionMap(mutant)
 
 		if unique && maxLength < 8000 {
@@ -31,13 +31,14 @@ func Trials(genome *Genome, nd *NucDistro, n int) int {
 		}
 	}
 
-	reportProgress(n)
+	reportProgress(numTrials)
 	return good
 }
 
 func main() {
-	var nTrials int
+	var nTrials, nMuts int
 	flag.IntVar(&nTrials, "n", 10000, "Number of trials")
+	flag.IntVar(&nMuts, "m", 763, "Number of mutations per mutant")
 	flag.Parse()
 
 	nd := NewNucDistro(nil)
@@ -65,7 +66,7 @@ func main() {
 	results := make([]int, len(genomes))
 
 	for i := 0; i < len(genomes); i++ {
-		results[i] = Trials(genomes[i], nd, nTrials)
+		results[i] = Trials(genomes[i], nd, nTrials, nMuts)
 	}
 
 	for i := 0; i < len(genomes); i++ {
