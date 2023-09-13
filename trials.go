@@ -10,12 +10,12 @@ import (
 )
 
 func WriteHeadings(results io.Writer) {
-	fmt.Fprintln(results, "Name count maxLength unique acceptable"+
-		" mutsInSites totalSites totalSingles")
+	fmt.Fprintln(results, "name count max_length unique acceptable"+
+		" muts_in_sites total_sites total_singles")
 }
 
 func Trials(genome *Genomes, nd *NucDistro,
-	numTrials int, numMuts int, results io.Writer) int {
+	numTrials int, numMuts int, countSites bool, results io.Writer) int {
 	good := 0
 
 	count, maxLength, unique := FindRestrictionMap(genome)
@@ -39,7 +39,10 @@ func Trials(genome *Genomes, nd *NucDistro,
 			good += 1
 		}
 
-		sis := CountSilentInSites(mutant, RE_SITES, true)
+		var sis SilentInSites
+		if countSites {
+			sis = CountSilentInSites(mutant, RE_SITES, true)
+		}
 		fmt.Fprintln(results, genome.names[0], count,
 			maxLength, unique, acceptable,
 			sis.totalMuts, sis.totalSites, sis.totalSites)
@@ -55,11 +58,12 @@ func Trials(genome *Genomes, nd *NucDistro,
 
 func main() {
 	var nTrials, nMuts int
-	var test bool
+	var test, countSites bool
 
 	flag.IntVar(&nTrials, "n", 10000, "Number of trials")
 	flag.IntVar(&nMuts, "m", 763, "Number of mutations per mutant")
 	flag.BoolVar(&test, "t", false, "Just do some self-tests")
+	flag.BoolVar(&countSites, "c", false, "Count mutations per site etc.")
 	flag.Parse()
 
 	if test {
@@ -73,6 +77,7 @@ func main() {
 		"BtSY2",
 		"BANAL-20-236",
 		"BANAL-20-52",
+		"BANAL-20-103",
 		"RaTG13",
 	}
 
@@ -101,7 +106,8 @@ func main() {
 	WriteHeadings(resultsWriter)
 
 	for i := 0; i < len(genomes); i++ {
-		results[i] = Trials(genomes[i], nd, nTrials, nMuts, resultsWriter)
+		results[i] = Trials(genomes[i], nd, nTrials, nMuts,
+			countSites, resultsWriter)
 	}
 
 	for i := 0; i < len(genomes); i++ {
