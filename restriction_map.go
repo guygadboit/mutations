@@ -2,19 +2,30 @@ package main
 
 import (
 	"errors"
+	// "fmt"
 )
 
 type ReSite struct {
 	pattern     []byte
 	stickyStart int
-	stickyEnd   int // I mean the end of the sticky end
+	stickyEnd   int  // I mean the end of the sticky end
+	reverse     bool // Whether the sticky end needs to be reversed
 }
 
 var RE_SITES = []ReSite{
-	{[]byte("CGTCTC"), 1, 5},
-	{[]byte("GAGACG"), -11, -7},
-	{[]byte("GGTCTC"), 1, 5},
-	{[]byte("GAGACC"), -11, -7},
+	{[]byte("CGTCTC"), 1, 5, false},
+	{[]byte("GAGACG"), -5, -1, true},
+	{[]byte("GGTCTC"), 1, 5, false},
+	{[]byte("GAGACC"), -5, -1, true},
+}
+
+func reverse(b []byte) []byte {
+	n := len(b)
+	ret := make([]byte, n)
+	for i := 0; i < n; i++ {
+		ret[i] = b[n-i-1]
+	}
+	return ret
 }
 
 func getStickyEnd(genome *Genomes, pos int, site *ReSite) (string, error) {
@@ -25,7 +36,17 @@ func getStickyEnd(genome *Genomes, pos int, site *ReSite) (string, error) {
 		return "", errors.New("Out of bounds")
 	}
 
-	return string(genome.nts[0][start:end]), nil
+	s := genome.nts[0][start:end]
+	if site.reverse {
+		s = reverse(s)
+	}
+
+	/*
+	fmt.Printf("pos: %d %s sticky %d->%d reverse %t: %s\n", pos,
+		site.pattern, start, end, site.reverse, string(s))
+	*/
+
+	return string(s), nil
 }
 
 /*
