@@ -37,9 +37,17 @@ func Trials(genome *Genomes, nd *NucDistro, numTrials int, numMuts int) int {
 
 func main() {
 	var nTrials, nMuts int
+	var test bool
+
 	flag.IntVar(&nTrials, "n", 10000, "Number of trials")
 	flag.IntVar(&nMuts, "m", 763, "Number of mutations per mutant")
+	flag.BoolVar(&test, "t", false, "Just do some self-tests")
 	flag.Parse()
+
+	if test {
+		Test()
+		return
+	}
 
 	nd := NewNucDistro(nil)
 
