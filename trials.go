@@ -1,11 +1,21 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"log"
+	"os"
+	"io"
 )
 
-func Trials(genome *Genomes, nd *NucDistro, numTrials int, numMuts int) int {
+func WriteHeadings(results io.Writer) {
+	fmt.Fprintln(results, "Name count maxLength unique acceptable"+
+		" mutsInSites totalSites totalSingles")
+}
+
+func Trials(genome *Genomes, nd *NucDistro,
+	numTrials int, numMuts int, results io.Writer) int {
 	good := 0
 
 	count, maxLength, unique := FindRestrictionMap(genome)
@@ -22,13 +32,17 @@ func Trials(genome *Genomes, nd *NucDistro, numTrials int, numMuts int) int {
 		count, maxLength, unique = FindRestrictionMap(mutant)
 
 		mutant.Combine(genome)
-		sis := CountSilentInSites(mutant, RE_SITES, true)
-		sis.Show()
 
-		if unique && maxLength < 8000 {
+		acceptable := unique && maxLength < 8000
+		if acceptable {
 			fmt.Printf("Mutant %d: %d, %d, %t\n", i, count, maxLength, unique)
 			good += 1
 		}
+
+		sis := CountSilentInSites(mutant, RE_SITES, true)
+		fmt.Fprintln(results, genome.names[0], count,
+			maxLength, unique, acceptable,
+			sis.totalMuts, sis.totalSites, sis.totalSites)
 
 		if i%100 == 0 {
 			reportProgress(i)
@@ -77,12 +91,24 @@ func main() {
 
 	results := make([]int, len(genomes))
 
+	fd, err := os.Create("results.txt")
+	if err != nil {
+		log.Fatal("Can't create results file")
+	}
+	defer fd.Close()
+
+	resultsWriter := bufio.NewWriter(fd)
+	WriteHeadings(resultsWriter)
+
 	for i := 0; i < len(genomes); i++ {
-		results[i] = Trials(genomes[i], nd, nTrials, nMuts)
+		results[i] = Trials(genomes[i], nd, nTrials, nMuts, resultsWriter)
 	}
 
 	for i := 0; i < len(genomes); i++ {
-		fmt.Printf("%s: %d/%d %.2f%%\n", fnames[i], results[i], nTrials,
-			float64(100.0*results[i])/float64(nTrials))
+		fmt.Printf("%s: %d/%d %.2f%%\n", genomes[i].names[0],
+			results[i], nTrials, float64(100.0*results[i])/float64(nTrials))
 	}
+
+	resultsWriter.Flush()
+	fmt.Println("Wrote results.txt")
 }

@@ -70,7 +70,8 @@ func CountSilentInSites(genomes *Genomes,
 			continue
 		}
 
-		// Now given that it is mutated, check that it's silent
+		// Now given that it is mutated, check that it's silent (we might
+		// already know that it is)
 		if !assumeSilent {
 			if !isSilent(genomes, pos, m) {
 				continue

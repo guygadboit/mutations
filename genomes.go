@@ -15,12 +15,14 @@ import (
 	for a single genome.
 */
 type Genomes struct {
-	nts  [][]byte
-	orfs *Orfs
+	nts   [][]byte
+	names []string
+	orfs  *Orfs
 }
 
 func NewGenomes(orfs *Orfs, numGenomes int) *Genomes {
-	return &Genomes{make([][]byte, numGenomes), orfs}
+	return &Genomes{make([][]byte, numGenomes),
+		make([]string, numGenomes), orfs}
 }
 
 /*
@@ -55,6 +57,7 @@ loop:
 		line = strings.TrimSpace(line)
 
 		if strings.HasPrefix(line, ">") {
+			ret.names = append(ret.names, line[1:])
 			if len(currentRow) > 0 {
 				ret.nts = append(ret.nts, currentRow)
 				currentRow = make([]byte, 0)
