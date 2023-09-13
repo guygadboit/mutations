@@ -74,11 +74,14 @@ func main() {
 	nd := NewNucDistro(nil)
 
 	fnames := []string{
+		"ChimericAncestor",
+		/*
 		"BtSY2",
 		"BANAL-20-236",
 		"BANAL-20-52",
 		"BANAL-20-103",
 		"RaTG13",
+		*/
 	}
 
 	genomes := make([]*Genomes, len(fnames))
