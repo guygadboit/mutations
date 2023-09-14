@@ -7,15 +7,36 @@ import (
 	"io"
 	"log"
 	"os"
+	"sync"
 )
 
-func WriteHeadings(results io.Writer) {
-	fmt.Fprintln(results, "name count max_length unique acceptable"+
+type TrialResult struct {
+	name         string // genome name
+	count        int    // number of sites
+	maxLength    int    // length of longest segment
+	unique       bool   // unique sticky ends?
+	acceptable   bool   // longest segment < 8kb and unique sticky?
+	interleaved  bool   // BsaI interleaved with BsmBI?
+	mutsInSites  int    // Number of silent muts in sites
+	totalSites   int    // Total number of silently mutated sites
+	totalSingles int    // Total number sites silently mutated with 1 mut
+}
+
+func WriteHeadings(w io.Writer) {
+	fmt.Fprintln(w, "name count max_length unique acceptable"+
 		" interleaved muts_in_sites total_sites total_singles")
 }
 
+func (r *TrialResult) Write(w io.Writer) {
+	fmt.Fprintln(w, r.name,
+		r.count,
+		r.maxLength, r.unique, r.acceptable, r.interleaved,
+		r.mutsInSites, r.totalSites, r.totalSites)
+}
+
 func Trials(genome *Genomes, nd *NucDistro,
-	numTrials int, numMuts int, countSites bool, results io.Writer) int {
+	numTrials int, numMuts int, countSites bool,
+	results chan *TrialResult) {
 	good := 0
 
 	count, maxLength, unique, interleaved := FindRestrictionMap(genome)
@@ -36,8 +57,10 @@ func Trials(genome *Genomes, nd *NucDistro,
 
 		acceptable := unique && maxLength < 8000
 		if acceptable {
-			fmt.Printf("Mutant %d: %d, %d, %t, %t\n", i, count,
-				maxLength, unique, interleaved)
+			/*
+				fmt.Printf("Mutant %d: %d, %d, %t, %t\n", i, count,
+					maxLength, unique, interleaved)
+			*/
 			good += 1
 		}
 
@@ -45,9 +68,10 @@ func Trials(genome *Genomes, nd *NucDistro,
 		if countSites {
 			sis = CountSilentInSites(mutant, RE_SITES, true)
 		}
-		fmt.Fprintln(results, genome.names[0], count,
-			maxLength, unique, acceptable, interleaved,
-			sis.totalMuts, sis.totalSites, sis.totalSites)
+
+		results <- &TrialResult{genome.names[0],
+			count, maxLength, unique, acceptable, interleaved,
+			sis.totalMuts, sis.totalSites, sis.totalSites}
 
 		if i%100 == 0 {
 			reportProgress(i)
@@ -55,15 +79,15 @@ func Trials(genome *Genomes, nd *NucDistro,
 	}
 
 	reportProgress(numTrials)
-	return good
 }
 
 func main() {
-	var nTrials, nMuts int
+	var nTrials, nMuts, nThreads int
 	var test, countSites bool
 
 	flag.IntVar(&nTrials, "n", 10000, "Number of trials")
 	flag.IntVar(&nMuts, "m", 763, "Number of mutations per mutant")
+	flag.IntVar(&nThreads, "p", 1, "Number of threads")
 	flag.BoolVar(&test, "t", false, "Just do some self-tests")
 	flag.BoolVar(&countSites, "c", false, "Count mutations per site etc.")
 	flag.Parse()
@@ -97,8 +121,6 @@ func main() {
 	}
 	nd.Show()
 
-	results := make([]int, len(genomes))
-
 	fd, err := os.Create("results.txt")
 	if err != nil {
 		log.Fatal("Can't create results file")
@@ -107,17 +129,42 @@ func main() {
 
 	resultsWriter := bufio.NewWriter(fd)
 	WriteHeadings(resultsWriter)
+	results := make(chan *TrialResult, 1000)
+	var wg sync.WaitGroup
 
-	for i := 0; i < len(genomes); i++ {
-		results[i] = Trials(genomes[i], nd, nTrials, nMuts,
-			countSites, resultsWriter)
+	// Cut the work up unto nThreads pieces, all writing their results to a
+	// single channel. Each thread will do a portion of the tests but for all
+	// genomes
+	for i := 0; i < nThreads; i++ {
+		wg.Add(len(genomes))
+
+		go func() {
+			for j := 0; j < len(genomes); j++ {
+				Trials(genomes[j], nd, nTrials/nThreads,
+					nMuts, countSites, results)
+				wg.Done()
+			}
+		}()
 	}
 
-	for i := 0; i < len(genomes); i++ {
-		fmt.Printf("%s: %d/%d %.2f%%\n", genomes[i].names[0],
-			results[i], nTrials, float64(100.0*results[i])/float64(nTrials))
-	}
+	// Keep reading out of the results channel and writing to the results file
+	// until everyone has finished (we will write to stop once wg has
+	// completed)
+	stop := make(chan bool)
+	go func(stop chan bool) {
+	loop:
+		for {
+			select {
+			case r := <-results:
+				r.Write(resultsWriter)
+			case <-stop:
+				break loop
+			}
+		}
+		resultsWriter.Flush()
+		fmt.Println("Wrote results.txt")
+	}(stop)
 
-	resultsWriter.Flush()
-	fmt.Println("Wrote results.txt")
+	wg.Wait()
+	stop <- true
 }

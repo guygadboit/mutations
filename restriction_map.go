@@ -57,7 +57,9 @@ func getStickyEnd(genome *Genomes, pos int, site *ReSite) (string, error) {
 
 /*
 	Returns the number of segments the length of the longest one, whether
-	the sticky ends are all unique, and whether there is interleaving
+	the sticky ends are all unique, and whether there is interleaving. Note: I
+	doubt interleaving has any significance but it's something people ask about
+	so we might as well generate a result for them.
 */
 func FindRestrictionMap(genome *Genomes) (int, int, bool, bool) {
 	var s Search

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	"time"
 )
 
 // Counts for each nucleotide in a genome
@@ -47,23 +46,11 @@ func (nd *NucDistro) Show() {
 	fmt.Printf("Total: %d\n", nd.total)
 }
 
-var RandGenerator *rand.Rand
-
-func GetRandGenerator() *rand.Rand {
-	if RandGenerator == nil {
-		RandGenerator = rand.New(rand.NewSource(time.Now().UnixNano()))
-		// For debugging use the same seed
-		// RandGenerator = rand.New(rand.NewSource(2144))
-	}
-	return RandGenerator
-}
-
 /*
 	Pick a nucleotide randomly from the distribution represented by nd
 */
 func (nd *NucDistro) Random() byte {
-	randGenerator := GetRandGenerator()
-	r := randGenerator.Intn(nd.total)
+	r := rand.Intn(nd.total)
 
 	var k byte
 	for k = range nd.nts {

@@ -1,11 +1,14 @@
 package main
 
+import (
+	"math/rand"
+)
+
 /*
 	Introduce num silent mutations into genome (the first one), selecting nts
 	randomly from nucDist. Return the number of mutations
 */
 func MutateSilent(genome *Genomes, nucDist *NucDistro, num int) int {
-	randGenerator := GetRandGenerator()
 	numMuts := 0
 	alreadyDone := make(map[int]int)
 	nts := genome.nts[0]
@@ -44,7 +47,7 @@ func MutateSilent(genome *Genomes, nucDist *NucDistro, num int) int {
 
 mutations:
 	for i := 0; i < num; {
-		start := randGenerator.Intn(genome.Length())
+		start := rand.Intn(genome.Length())
 
 		for j := start; j < genome.Length(); j++ {
 			if tryMutate(j) {

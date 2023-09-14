@@ -95,11 +95,10 @@ def main():
 	if args.graph:
 		make_graph_files(results)
 
-	if args.rates:
-		rates(results)
-
 	if args.max_count or args.require_not_interleaved:
 		rates(results, args.max_count, args.require_not_interleaved)
+	elif args.rates:
+		rates(results)
 
 if __name__ == "__main__":
 	main()
