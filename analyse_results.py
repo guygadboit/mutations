@@ -63,11 +63,17 @@ def rates(results, max_count=None, require_not_interleaved=False):
 		for result in v:
 			acceptable = result.acceptable
 
+			# The "acceptable" field in the results is redundant but it's still
+			# worth working it out in the Go program just so we can print it
+			# out as we go along. So we might as well check it here.
+			assert acceptable == (result.unique and result.max_length < 8000)
+
 			if max_count is not None:
 				acceptable = acceptable and result.count <= max_count
 
 			if require_not_interleaved:
 				acceptable = acceptable and not result.interleaved
+
 
 			if acceptable:
 				good += 1
