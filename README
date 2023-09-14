@@ -1,0 +1,96 @@
+Introduction
+============
+
+This program adds silent mutations to genomes and reports on certain features
+of where their BsaI and BsmBI enzyme recognition sites end up, counting how
+many of them end up with a longest segment less than 8000nts long and which
+have unique sticky ends.
+
+It works by picking a nucleotide at random from the distribution it finds in
+the actual starting genomes. It then tries to put that nucleotide in at a
+random position to replace what was there. But if that would change the protein
+it gives up and tries again. It keeps doing this until it's achieved 800
+individual mutations, or however many you asked for.
+
+Then it looks at the resulting mutated genome for where the BsaI/BsmBI sites
+are.
+
+It tries 6 starting genomes, which are all closely related to SARS-CoV-2:
+
+	ChimericAncestor
+	BtSY2
+	BANAL-20-236
+	BANAL-20-52
+	BANAL-20-103
+	RaTG13
+
+You can easily add to that list if you want. You will need a .fasta file, a
+corresponding .orfs file (you can look in one to see the format, and find the
+ORFS by looking for the CDS entries in the genbank file).
+
+The "ChimericAncestor" was constructed based on Figure 2 from this paper:
+
+https://doi.org/10.1038/s41586-022-04532-4
+
+using RatG13 for the sections marked "MULT" (which happened to be the closest
+out of those mentioned).
+
+Building
+========
+
+./build.sh
+
+Running
+=======
+
+Usage of ./mutations:
+  -c	Count mutations per site etc.
+  -m int
+    	Number of mutations per mutant (default 763)
+  -n int
+    	Number of trials (default 10000)
+  -p int
+    	Number of threads (default 1)
+  -t	Just do some self-tests
+
+Example:
+
+$ ./mutations -p 4
+
+The more threads you use the faster it will finish since your computer probably
+has a few cores (it takes about 10m to do 10000 tests for each genome with 4
+threads on my computer).
+
+-c will make it slower and is kind of work-in-progress at the moment for some
+other things I'm investigating so I wouldn't use that.
+
+Reading the results
+===================
+
+The program prints out some status while it's going so you know it's working
+but the results all go into a file called results.txt which should have an
+obvious format.
+
+$ python3 analyze_results.py results.txt
+
+To see the results.
+
+There are various options for inspecting them in different ways:
+
+analyse_results.py [-h] [-s] [-g] [-r] [-m MAX_COUNT] [-i] fname
+
+The actual results
+==================
+
+Run with 799 muts (the actual distance between SC2 and the "Chimeric
+Ancestor"-- the others are similar):
+
+ChimericAncestor: 26074/32000 81.48%
+BtSY2: 22663/32000 70.82%
+BANAL-20-236: 12588/32000 39.34%
+BANAL-20-52: 1641/32000 5.13%
+BANAL-20-103: 12719/32000 39.75%
+RaTG13: 14677/32000 45.87%
+
+In other words, the Chimeric Ancestor had about an 80% chance of evolving into
+an apparent artifical reverse genetics system, 70.82% for BtSY2, etc.
