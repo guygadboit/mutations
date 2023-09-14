@@ -53,8 +53,6 @@ func Trials(genome *Genomes, nd *NucDistro,
 		MutateSilent(mutant, nd, numMuts)
 		count, maxLength, unique, interleaved = FindRestrictionMap(mutant)
 
-		mutant.Combine(genome)
-
 		acceptable := unique && maxLength < 8000
 		if acceptable {
 			/*
@@ -66,6 +64,7 @@ func Trials(genome *Genomes, nd *NucDistro,
 
 		var sis SilentInSites
 		if countSites {
+			mutant.Combine(genome)
 			sis = CountSilentInSites(mutant, RE_SITES, true)
 		}
 
