@@ -57,7 +57,9 @@ loop:
 		line = strings.TrimSpace(line)
 
 		if strings.HasPrefix(line, ">") {
-			ret.names = append(ret.names, line[1:])
+			fields := strings.Fields(line[1:])
+			name := fields[0]
+			ret.names = append(ret.names, name)
 			if len(currentRow) > 0 {
 				ret.nts = append(ret.nts, currentRow)
 				currentRow = make([]byte, 0)
