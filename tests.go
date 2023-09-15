@@ -43,9 +43,27 @@ func testAlternatives(genome *Genomes) {
 	fmt.Println(alternatives)
 }
 
+func testCachedSearch(genome *Genomes) {
+	var cs CachedSearch
+
+	for i := 0; i < 3; i++ {
+		fmt.Printf("Starting search\n")
+		cs.Init(genome, RE_SITES)
+		for {
+			pos, site := cs.Iter()
+			if cs.End() {
+				break
+			}
+
+			fmt.Printf("%s at %d\n", string(site.pattern), pos)
+		}
+	}
+}
+
 func Test() {
 	genome := LoadGenomes("BANAL-20-52.fasta", "BANAL-20-52.orfs")
+	testCachedSearch(genome)
 	// testMutations(genome)
 	// testAlternatives(genome)
-	testTamper(genome)
+	// testTamper(genome)
 }

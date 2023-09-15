@@ -84,6 +84,14 @@ func RemoveSite(genome *Genomes, sites []ReSite) (int, error) {
 		return true
 	}
 
+	/*
+		So rather than searching every time, since we're going to be mutating
+		the same genome over and over again, I think you need something that
+		just stores the positions of the sites. Would save a lot of time. And
+		if you were going to search twice (just so you can wrap) here you could
+		just stack the positions. But let's do a whole new SavedSearch object
+		or something. FIXME YOU ARE HERE.
+	*/
 	var search Search
 
 	// First look for sites after our random starting point
