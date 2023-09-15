@@ -7,6 +7,8 @@ import (
 	"io"
 	"log"
 	"os"
+	"sort"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -99,6 +101,8 @@ var CodonTable = map[string]byte{
 	"GGA": 'G',
 	"GGG": 'G',
 }
+
+var ReverseCodonTable map[byte][]string
 
 type Orf struct {
 	start, end int
@@ -261,4 +265,147 @@ func (env *Environment) Replace(replacement []byte) (bool, int) {
 	}
 
 	return silent, differences
+}
+
+// Silent alternative to a sequence of nts and how many muts that would require
+type Alternative struct {
+	numMuts int
+	nts     []byte
+}
+
+type Alternatives []Alternative
+
+// Iterator for finding the alternatives to a given subsequence
+type altIter struct {
+	protein  []byte // the protein we're finding nts for, as RL not RRRLLL
+	odometer []int  // tracks the codon combinations as we iterate them
+}
+
+func (it *altIter) Init(protein []byte) {
+	it.protein = protein
+	it.odometer = make([]int, len(protein))
+}
+
+/*
+	Return the next alternative and whether there are any more to come after
+	it.
+*/
+func (it *altIter) Next() ([]byte, bool) {
+	prot := it.protein
+	ret := make([]byte, 0, len(prot)*3)
+
+	for i := 0; i < len(prot); i++ {
+		codons := ReverseCodonTable[prot[i]]
+		ret = append(ret, []byte(codons[it.odometer[i]])...)
+	}
+
+	// Increment the odometer like a sort of odometer
+	for j := 0; j < len(prot); j++ {
+		codons := ReverseCodonTable[prot[j]]
+		if it.odometer[j]+1 < len(codons) {
+			it.odometer[j]++
+			for k := 0; k < j; k++ {
+				it.odometer[k] = 0
+			}
+			return ret, true
+		}
+	}
+
+	return ret, false
+}
+
+func TestAlternatives() {
+	protein := []byte("LF")
+	var it altIter
+	it.Init(protein)
+
+	for {
+		alt, more := it.Next()
+		fmt.Println(string(alt))
+		if !more {
+			break
+		}
+	}
+}
+
+/*
+	Newer versions of Go have a more "ergonomic" slices.SortFunc which saves
+	you doing all this.
+*/
+func (a Alternatives) Len() int {
+	return len(a)
+}
+
+func (a Alternatives) Less(i, j int) bool {
+	return a[i].numMuts < a[j].numMuts
+}
+
+func (a Alternatives) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+
+/*
+	Find the alternative nt sequences that would not change the protein here,
+	ordered by fewest muts first.
+*/
+func (env *Environment) FindAlternatives(maxMuts int) Alternatives {
+	var it altIter
+	ret := make(Alternatives, 0)
+
+	// The protein stored in env is like LLLRRRIII. We want just LRI.
+	windowLen := len(env.window)
+	protein := make([]byte, windowLen/3)
+	for i := 0; i < len(protein); i++ {
+		protein[i] = env.protein[i*3]
+	}
+
+	it.Init(protein)
+	existing := env.Subsequence()
+
+	for more := true; more; {
+		var alt []byte
+		alt, more = it.Next()
+		start, end := env.offset, env.offset + env.len
+
+		// The alternative is no good if it differs outside the subsequence
+		if !reflect.DeepEqual(alt[:start], env.window[:start]) {
+			continue
+		}
+
+		if !reflect.DeepEqual(alt[end:], env.window[end:]) {
+			continue
+		}
+
+		numMuts := 0
+		for i := 0; i < env.len; i++ {
+			if alt[start+i] != existing[i] {
+				numMuts++
+			}
+		}
+
+		if numMuts > 0 && numMuts <= maxMuts {
+			ret = append(ret, Alternative{numMuts,
+			alt[start:end]})
+		}
+
+		if !more {
+			break
+		}
+	}
+
+	sort.Sort(ret)
+	return ret
+}
+
+func init() {
+	ReverseCodonTable = make(map[byte][]string)
+	for k := range CodonTable {
+		v, _ := CodonTable[k]
+
+		codons, there := ReverseCodonTable[v]
+		if !there {
+			codons = make([]string, 0)
+		}
+		ReverseCodonTable[v] = append(codons, k)
+	}
 }
