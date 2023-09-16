@@ -127,12 +127,15 @@ func RemoveSite(genome *Genomes,
 	Try to silently remove the specified numbers of sites. Return the actual number
 	modified
 */
-func Tamper(genome *Genomes, search *CachedSearch, remove, add int) int {
+func Tamper(genome *Genomes, sites []ReSite, remove, add int) int {
 	removed := make(map[int]bool)
 	count := 0
 
+	var search CachedSearch
+	search.Init(genome, sites)
+
 	for i := 0; i < remove; i++ {
-		pos, err := RemoveSite(genome, search, removed)
+		pos, err := RemoveSite(genome, &search, removed)
 		if err == nil {
 			removed[pos] = true
 			count++
@@ -169,16 +172,13 @@ func TamperTrials(genome *Genomes, nd *NucDistro,
 	mutant := genome.Clone()
 	MutateSilent(mutant, nd, numMuts)
 
-	var s CachedSearch
-	s.Init(mutant, RE_SITES)
-
 	tampered := rand.Intn(1) == 1
 	if tampered {
-		Tamper(mutant, &s, 3, 3)
+		Tamper(mutant, RE_SITES, 3, 3)
 	}
 
 	var result TamperTrialResult
-	result.SilentInSites = CountSilentInSites(mutant, s.GetSites(), true)
+	result.SilentInSites = CountSilentInSites(mutant, RE_SITES, true)
 	result.name = genome.names[0]
 	result.tampered = tampered
 
