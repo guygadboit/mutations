@@ -62,8 +62,8 @@ func testCachedSearch(genome *Genomes) {
 
 func Test() {
 	genome := LoadGenomes("BANAL-20-52.fasta", "BANAL-20-52.orfs")
-	testCachedSearch(genome)
+	// testCachedSearch(genome)
 	// testMutations(genome)
 	// testAlternatives(genome)
-	// testTamper(genome)
+	testTamper(genome)
 }

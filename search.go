@@ -5,23 +5,23 @@ import (
 )
 
 type Search struct {
-	genomes *Genomes		// Where we're looking
-	reSites []ReSite		// What we're looking for
+	genomes *Genomes // Where we're looking
+	reSites []ReSite // What we're looking for
 
-	i       int				// Where we got to looking for sites
-	cache	SearchCache		// Cached results if we did this before
+	i     int         // Where we got to looking for sites
+	cache SearchCache // Cached results if we did this before
 }
 
-type CachedSearch struct{
+type CachedSearch struct {
 	Search
-	cache		SearchCache
-	searchI		int				// Where we are in the cache
-	cacheFull	bool			// Whether it's full of valid data yet
+	cache     SearchCache
+	searchI   int  // Where we are in the cache
+	cacheFull bool // Whether it's full of valid data yet
 }
 
 type SearchCacheResult struct {
-	pos		int
-	site	*ReSite
+	pos  int
+	site *ReSite
 }
 
 type SearchCache []SearchCacheResult
@@ -76,6 +76,10 @@ func (s *Search) Iter() (int, *ReSite) {
 
 func (s *Search) End() bool {
 	return s.i == s.genomes.Length()
+}
+
+func (s *Search) GetSites() []ReSite {
+	return s.reSites
 }
 
 func (s *CachedSearch) cacheIter() (int, *ReSite) {

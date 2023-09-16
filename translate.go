@@ -7,8 +7,8 @@ import (
 	"io"
 	"log"
 	"os"
-	"sort"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -365,7 +365,7 @@ func (env *Environment) FindAlternatives(maxMuts int) Alternatives {
 	for more := true; more; {
 		var alt []byte
 		alt, more = it.Next()
-		start, end := env.offset, env.offset + env.len
+		start, end := env.offset, env.offset+env.len
 
 		// The alternative is no good if it differs outside the subsequence
 		if !reflect.DeepEqual(alt[:start], env.window[:start]) {
@@ -385,7 +385,7 @@ func (env *Environment) FindAlternatives(maxMuts int) Alternatives {
 
 		if numMuts > 0 && numMuts <= maxMuts {
 			ret = append(ret, Alternative{numMuts,
-			alt[start:end]})
+				alt[start:end]})
 		}
 
 		if !more {
