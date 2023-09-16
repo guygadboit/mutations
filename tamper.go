@@ -2,8 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
-	"io"
 	"math/rand"
 )
 
@@ -154,33 +152,4 @@ func Tamper(genome *Genomes, sites []ReSite, remove, add int) int {
 	}
 
 	return count
-}
-
-type TamperTrialResult struct {
-	SilentInSites
-	name     string
-	tampered bool
-}
-
-func (r *TamperTrialResult) Write(w io.Writer) {
-	fmt.Fprintln(w, r.name, r.tampered,
-		r.totalMuts, r.totalSites, r.totalSingleSites)
-}
-
-func TamperTrials(genome *Genomes, nd *NucDistro,
-	numTrials int, numMuts int, results chan *TamperTrialResult) {
-	mutant := genome.Clone()
-	MutateSilent(mutant, nd, numMuts)
-
-	tampered := rand.Intn(1) == 1
-	if tampered {
-		Tamper(mutant, RE_SITES, 3, 3)
-	}
-
-	var result TamperTrialResult
-	result.SilentInSites = CountSilentInSites(mutant, RE_SITES, true)
-	result.name = genome.names[0]
-	result.tampered = tampered
-
-	results <- &result
 }

@@ -10,85 +10,26 @@ import (
 	"sync"
 )
 
-type TrialResult struct {
-	name         string // genome name
-	count        int    // number of sites
-	maxLength    int    // length of longest segment
-	unique       bool   // unique sticky ends?
-	acceptable   bool   // longest segment < 8kb and unique sticky?
-	interleaved  bool   // BsaI interleaved with BsmBI?
-	mutsInSites  int    // Number of silent muts in sites
-	totalSites   int    // Total number of silently mutated sites
-	totalSingles int    // Total number sites silently mutated with 1 mut
+type TrialResult interface {
+	Write(w io.Writer)
 }
 
-func WriteHeadings(w io.Writer) {
-	fmt.Fprintln(w, "name count max_length unique acceptable"+
-		" interleaved muts_in_sites total_sites total_singles")
-}
-
-func (r *TrialResult) Write(w io.Writer) {
-	fmt.Fprintln(w, r.name,
-		r.count,
-		r.maxLength, r.unique, r.acceptable, r.interleaved,
-		r.mutsInSites, r.totalSites, r.totalSites)
-}
-
-func Trials(genome *Genomes, nd *NucDistro,
-	numTrials int, numMuts int, countSites bool,
-	results chan *TrialResult) {
-	good := 0
-
-	count, maxLength, unique, interleaved := FindRestrictionMap(genome)
-	fmt.Printf("Original: %d, %d, %t, %t\n", count,
-		maxLength, unique, interleaved)
-
-	reportProgress := func(n int) {
-		fmt.Printf("Tested %d. Found %d/%d good mutants (%.2f%%)\n", n,
-			good, n, float64(good*100)/float64(n))
-	}
-
-	for i := 0; i < numTrials; i++ {
-		mutant := genome.Clone()
-		MutateSilent(mutant, nd, numMuts)
-		count, maxLength, unique, interleaved = FindRestrictionMap(mutant)
-
-		acceptable := unique && maxLength < 8000
-		if acceptable {
-			/*
-				fmt.Printf("Mutant %d: %d, %d, %t, %t\n", i, count,
-					maxLength, unique, interleaved)
-			*/
-			good += 1
-		}
-
-		var sis SilentInSites
-		if countSites {
-			mutant.Combine(genome)
-			sis = CountSilentInSites(mutant, RE_SITES, true)
-		}
-
-		results <- &TrialResult{genome.names[0],
-			count, maxLength, unique, acceptable, interleaved,
-			sis.totalMuts, sis.totalSites, sis.totalSites}
-
-		if i%100 == 0 {
-			reportProgress(i)
-		}
-	}
-
-	reportProgress(numTrials)
+type Trial interface {
+	WriteHeadings(w io.Writer)
+	Run(genome *Genomes, results chan interface{})
 }
 
 func main() {
 	var nTrials, nMuts, nThreads int
 	var test, countSites bool
+	var trialType string
 
 	flag.IntVar(&nTrials, "n", 10000, "Number of trials")
 	flag.IntVar(&nMuts, "m", 763, "Number of mutations per mutant")
 	flag.IntVar(&nThreads, "p", 1, "Number of threads")
 	flag.BoolVar(&test, "t", false, "Just do some self-tests")
 	flag.BoolVar(&countSites, "c", false, "Count mutations per site etc.")
+	flag.StringVar(&trialType, "trial", "spacing", "Which trials to run")
 	flag.Parse()
 
 	if test {
@@ -120,6 +61,24 @@ func main() {
 	}
 	nd.Show()
 
+	spacingTrial := SpacingTrial{
+		func(genome *Genomes, results chan interface{}) {
+			SpacingTrials(genome, nd, nTrials/nThreads,
+				nMuts, countSites, results)
+		}}
+
+	tamperTrial := TamperTrial{
+		func(genome *Genomes, results chan interface{}) {
+			TamperTrials(genome, nd, nTrials/nThreads, nMuts, results)
+		}}
+
+	trials := map[string]Trial{
+		"spacing": &spacingTrial,
+		"tamper":  &tamperTrial,
+	}
+
+	trial := trials[trialType]
+
 	fd, err := os.Create("results.txt")
 	if err != nil {
 		log.Fatal("Can't create results file")
@@ -127,8 +86,8 @@ func main() {
 	defer fd.Close()
 
 	resultsWriter := bufio.NewWriter(fd)
-	WriteHeadings(resultsWriter)
-	results := make(chan *TrialResult, 1000)
+	trial.WriteHeadings(resultsWriter)
+	results := make(chan interface{}, 1000)
 	var wg sync.WaitGroup
 
 	// Cut the work up unto nThreads pieces, all writing their results to a
@@ -139,8 +98,7 @@ func main() {
 
 		go func() {
 			for j := 0; j < len(genomes); j++ {
-				Trials(genomes[j], nd, nTrials/nThreads,
-					nMuts, countSites, results)
+				trial.Run(genomes[j], results)
 				wg.Done()
 			}
 		}()
@@ -155,7 +113,8 @@ func main() {
 		for {
 			select {
 			case r := <-results:
-				r.Write(resultsWriter)
+				trialResult := r.(TrialResult)
+				trialResult.Write(resultsWriter)
 			case <-stop:
 				break loop
 			}

@@ -32,6 +32,7 @@ def parse_all_results(fname):
 		ret[res.name].append(res)
 	return ret
 
+
 def score(results, field):
 	x, y = [], []
 	for result in results:
