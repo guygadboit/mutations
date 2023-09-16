@@ -20,7 +20,7 @@ type Trial interface {
 }
 
 func main() {
-	var nTrials, nMuts, nThreads int
+	var nTrials, nMuts, nThreads, nEdits int
 	var test, countSites bool
 	var trialType string
 
@@ -30,6 +30,7 @@ func main() {
 	flag.BoolVar(&test, "t", false, "Just do some self-tests")
 	flag.BoolVar(&countSites, "c", false, "Count mutations per site etc.")
 	flag.StringVar(&trialType, "trial", "spacing", "Which trials to run")
+	flag.IntVar(&nEdits, "edits", 3, "Number of sites to move")
 	flag.Parse()
 
 	if test {
@@ -69,7 +70,7 @@ func main() {
 
 	tamperTrial := TamperTrial{
 		func(genome *Genomes, results chan interface{}) {
-			TamperTrials(genome, nd, nTrials/nThreads, nMuts, results)
+			TamperTrials(genome, nd, nTrials/nThreads, nMuts, nEdits, results)
 		}}
 
 	trials := map[string]Trial{

@@ -30,7 +30,7 @@ func (r *TamperTrialResult) Write(w io.Writer) {
 }
 
 func TamperTrials(genome *Genomes, nd *NucDistro,
-	numTrials int, numMuts int, results chan interface{}) {
+	numTrials int, numMuts int, numEdits int, results chan interface{}) {
 
 	reportProgress := func(n int) {
 		fmt.Printf("Run %d/%d trials\n", n, numTrials)
@@ -42,7 +42,7 @@ func TamperTrials(genome *Genomes, nd *NucDistro,
 
 		tampered := rand.Intn(2) == 1
 		if tampered {
-			Tamper(mutant, RE_SITES, 3, 3)
+			Tamper(mutant, RE_SITES, numEdits, numEdits)
 		}
 
 		var result TamperTrialResult

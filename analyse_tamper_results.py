@@ -16,11 +16,13 @@ class Correlation:
 			return getattr(result, self.name)
 
 	def calc(self, results):
-		x = [r.tampered for r in results]
-		y = [self.get_val(r) for r in results]
+		x, y = [], []
 
-		print(x, y)
-		brk()
+		for r in results:
+			val = self.get_val(r)
+			if val is not None:
+				x.append(r.tampered)
+				y.append(val)
 
 		pb = pointbiserialr(x, y)
 		return pb.correlation, pb.pvalue
@@ -31,7 +33,7 @@ class MutsPer(Correlation):
 		if r.total_sites:
 			return float(r.muts_in_sites) / r.total_sites
 		else:
-			return 0
+			return None
 
 
 def main():
@@ -52,7 +54,7 @@ def main():
 	for k, v in results.items():
 		print(k)
 		for c in correlations:
-			print(c.name, c.calc(v))
+			print("{}: {:.4f} {:.4g}".format(c.name, *c.calc(v)))
 
 
 if __name__ == "__main__":
