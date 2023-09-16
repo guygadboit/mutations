@@ -28,7 +28,9 @@ func testMutations(genome *Genomes) {
 }
 
 func testTamper(genome *Genomes) {
-	num := Tamper(genome, RE_SITES, 10, 10)
+	var s CachedSearch
+	s.Init(genome, RE_SITES)
+	num := Tamper(genome, &s, 10, 10)
 	fmt.Printf("Tampered with %d sites\n", num)
 
 	genome.Save("Mutant", "B52-mutated.fasta", 0)

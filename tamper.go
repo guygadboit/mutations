@@ -2,8 +2,8 @@ package main
 
 import (
 	"errors"
-	//"fmt"
 	"math/rand"
+	//"fmt"
 )
 
 /*
@@ -51,17 +51,24 @@ func AddSite(genome *Genomes, sites []ReSite,
 }
 
 /*
-	Remove a site from somewhere random. Return the position it was removed
-	from.
+	Remove a site from somewhere random, but not in notAt. Return the position
+	it was removed from.
 */
-func RemoveSite(genome *Genomes, sites []ReSite) (int, error) {
+func RemoveSite(genome *Genomes,
+	search *CachedSearch, notAt map[int]bool) (int, error) {
 	n := genome.Length()
+	sites := search.GetSites()
 	m := len(sites[0].pattern)
 	nts := genome.nts[0]
 
 	genomeStart := rand.Intn(n)
 
 	var tryRemove = func(pos int) bool {
+		_, there := notAt[pos]
+		if there {
+			return false
+		}
+
 		var env Environment
 		err := env.Init(genome, pos, m, 0)
 		if err != nil {
@@ -76,15 +83,13 @@ func RemoveSite(genome *Genomes, sites []ReSite) (int, error) {
 		alt := alternatives[rand.Intn(len(alternatives))]
 
 		/*
-			fmt.Printf("Replacing %s with %d at %s\n",
-				string(nts[pos:pos+m]), pos, string(alt.nts))
+			fmt.Printf("Replacing %s <- %s at %d\n",
+				string(nts[pos:pos+m]), string(alt.nts), pos)
 		*/
 
 		copy(nts[pos:pos+m], alt.nts)
 		return true
 	}
-
-	var search CachedSearch
 
 	// First look for sites after our random starting point
 	for search.Init(genome, sites); ; {
@@ -121,12 +126,12 @@ func RemoveSite(genome *Genomes, sites []ReSite) (int, error) {
 	Try to silently remove the specified numbers of sites. Return the actual number
 	modified
 */
-func Tamper(genome *Genomes, sites []ReSite, remove, add int) int {
+func Tamper(genome *Genomes, search *CachedSearch, remove, add int) int {
 	removed := make(map[int]bool)
 	count := 0
 
 	for i := 0; i < remove; i++ {
-		pos, err := RemoveSite(genome, sites)
+		pos, err := RemoveSite(genome, search, removed)
 		if err == nil {
 			removed[pos] = true
 			count++
@@ -136,7 +141,7 @@ func Tamper(genome *Genomes, sites []ReSite, remove, add int) int {
 	}
 
 	for i := 0; i < add; i++ {
-		_, err := AddSite(genome, sites, removed, 1)
+		_, err := AddSite(genome, search.GetSites(), removed, 1)
 		if err == nil {
 			count++
 		} else {
