@@ -15,6 +15,7 @@ func (t *SpacingTrial) Run(genome *Genomes, numMuts int,
 }
 
 func (t *SpacingTrial) WriteHeadings(w io.Writer) {
+	fmt.Fprintln(w, "# Results from a Spacing Trial")
 	fmt.Fprintln(w, "name count max_length unique acceptable"+
 		" interleaved muts_in_sites total_sites total_singles")
 }

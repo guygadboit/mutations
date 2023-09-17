@@ -59,6 +59,11 @@ func findMutsPerGenome(fnames []string, numMuts int) []int {
 	return mutsPerGenome
 }
 
+func writeParams(w io.Writer, nTrials, nMuts, nEdits int) {
+	fmt.Fprintf(w, "# Trials: %d Muts: %d (0 means auto) Edits: %d\n",
+		nTrials, nMuts, nEdits)
+}
+
 func main() {
 	var nTrials, nMuts, nThreads, nEdits int
 	var test, countSites bool
@@ -121,6 +126,8 @@ func main() {
 	defer fd.Close()
 
 	resultsWriter := bufio.NewWriter(fd)
+	writeParams(resultsWriter, nTrials, nMuts, nEdits)
+
 	trial.WriteHeadings(resultsWriter)
 	results := make(chan interface{}, 1000)
 

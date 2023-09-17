@@ -16,9 +16,14 @@ def convert_field(s):
 
 def parse_results(fname):
 	with open(fname) as fp:
-		line = next(iter(fp))
-		line = line.strip()
-		result_type = namedtuple("Result", line)
+		while True:
+			line = next(iter(fp))
+			line = line.strip()
+			if line.startswith('#'):
+				continue
+
+			result_type = namedtuple("Result", line)
+			break
 
 		for line in fp:
 			line = line.strip()

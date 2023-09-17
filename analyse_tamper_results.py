@@ -2,6 +2,7 @@ from scipy.stats import pointbiserialr, binom_test
 from argparse import ArgumentParser
 from analyse_results import parse_all_results
 from math import sqrt
+import re
 from pdb import set_trace as brk
 
 
@@ -97,13 +98,56 @@ def rank(references, results, field):
 		simulated = results[k[4:]]	# Just remove the WH-1 at the start
 
 		for result in simulated:
-			if not result.tampered:
-				continue
+			if result.tampered: continue
 			total += 1
 			if getattr(result, field) > ref_val:
 				total_more += 1
 
 		yield k, total, total_more
+
+
+def human(field_name):
+	n = re.sub(r'_', ' ', field_name)
+	return n.capitalize()
+
+
+def boxplot(name, references, results, field):
+	with open("{}-{}_true.dat".format(name, field), "wt") as true_fp:
+		with open("{}-{}_false.dat".format(name, field), "wt") as false_fp:
+			for r in results[name]:
+				fp = true_fp if r.tampered else false_fp
+				print(getattr(r, field), file=fp)
+
+	val = getattr(references["WH1-{}".format(name)], field)
+
+	with open("plot-{}-{}.gpi".format(name, field), "wt") as fp:
+		print("""set title "{human_field}. Actual value {val} indicated by arrow."
+set term png
+set output "{name}-{field}.png"
+set style fill solid 0.5 border -1
+set style boxplot nooutliers
+
+set style data boxplot
+set boxwidth  0.5
+set pointsize 0.5
+
+unset key
+set border 2
+set xtics nomirror
+set ytics nomirror
+set yrange [0:20]
+
+set arrow from 0, {val} to 1, {val} heads filled lc "red"
+
+set xtics ("{name} Untampered" 0, "{name} Tampered" 1) scale 0.0
+
+plot '{name}-{field}_false.dat' using (0):1, \
+	'{name}-{field}_true.dat' using (1):1""".format(
+		name=name,
+		human_field=human(field),
+		field=field,
+		val=val),
+	file=fp)
 
 
 def main():
@@ -121,7 +165,6 @@ def main():
 # 			MutsPer("muts_per")
 			]
 
-
 	for k, v in results.items():
 		print(k)
 		for c in correlations:
@@ -131,21 +174,23 @@ def main():
 			print("Mean: {:2f} Sensitivity: {:.2f} Specificity {:.2f}".format(
 				mean, sens*100, spec*100))
 
-			for k, ref in references.items():
-				val = getattr(ref, c.name)
-				print("{}: {} {}".format(k, val, val > mean))
+			ref = references["WH1-" + k]
+			val = getattr(ref, c.name)
+			print("Actual result: {} {}".format(val, val > mean))
 
 	print("""
 Where the real alignments for non-tampered genomes rank on each scores compared
 to the simulated ones. We're counting how many non-tampered alignments score
-higher:
+higher, so this is sort of like a p-value for being tampered.
 """)
 	for field in ("muts_in_sites", "total_sites", "total_singles"):
-	# for field in ("total_sites",):
 		for name, total, total_more in rank(references, results, field):
-			print("{} {}: {}/{} {:.4f}". format(name, field, total_more,
+			print("{}: {} {}/{} {:.4f}". format(name, field, total_more,
 				total, float(total_more) / total))
 
+	for f in ("total_sites", "total_singles"):
+		for k in results.keys():
+			boxplot(k, references, results, f)
 
 if __name__ == "__main__":
 	main()

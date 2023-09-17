@@ -16,6 +16,7 @@ func (t *TamperTrial) Run(genome *Genomes,
 }
 
 func (t *TamperTrial) WriteHeadings(w io.Writer) {
+	fmt.Fprintln(w, "# Results from a Tamper Trial")
 	fmt.Fprintln(w, "name tampered muts_in_sites total_sites total_singles")
 }
 
