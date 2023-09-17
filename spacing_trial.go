@@ -6,11 +6,12 @@ import (
 )
 
 type SpacingTrial struct {
-	runFunc func(genome *Genomes, results chan interface{})
+	runFunc func(genome *Genomes, numMuts int, results chan interface{})
 }
 
-func (t *SpacingTrial) Run(genome *Genomes, results chan interface{}) {
-	t.runFunc(genome, results)
+func (t *SpacingTrial) Run(genome *Genomes, numMuts int,
+	results chan interface{}) {
+	t.runFunc(genome, numMuts, results)
 }
 
 func (t *SpacingTrial) WriteHeadings(w io.Writer) {

@@ -16,7 +16,47 @@ type TrialResult interface {
 
 type Trial interface {
 	WriteHeadings(w io.Writer)
-	Run(genome *Genomes, results chan interface{})
+	Run(genome *Genomes, numMuts int, results chan interface{})
+}
+
+func loadGenomes(fnames []string) []*Genomes {
+	genomes := make([]*Genomes, len(fnames))
+	for i := 0; i < len(fnames); i++ {
+		genomes[i] = LoadGenomes(
+			fnames[i]+".fasta",
+			fnames[i]+".orfs",
+		)
+	}
+	return genomes
+}
+
+func findNucDistro(genomes []*Genomes) *NucDistro {
+	nd := NewNucDistro(nil)
+	for i := 0; i < len(genomes); i++ {
+		nd.Count(genomes[i])
+	}
+	return nd
+}
+
+/*
+	Return an array of ints for how many muts to apply, which either numMuts
+	for everything, or the number of silent muts there are between each genome
+	and WH1.
+*/
+func findMutsPerGenome(fnames []string, numMuts int) []int {
+	mutsPerGenome := make([]int, len(fnames))
+
+	for i := 0; i < len(fnames); i++ {
+		if numMuts != 0 {
+			mutsPerGenome[i] = numMuts
+		} else {
+			genomes := LoadGenomes(fmt.Sprintf("WH1-%s.fasta",
+				fnames[i]), "WH1.orfs")
+			mutsPerGenome[i], _ = CountMutations(genomes)
+		}
+	}
+
+	return mutsPerGenome
 }
 
 func main() {
@@ -25,7 +65,7 @@ func main() {
 	var trialType string
 
 	flag.IntVar(&nTrials, "n", 10000, "Number of trials")
-	flag.IntVar(&nMuts, "m", 763, "Number of mutations per mutant")
+	flag.IntVar(&nMuts, "m", 0, "Number of mutations (0 means auto)")
 	flag.IntVar(&nThreads, "p", 1, "Number of threads")
 	flag.BoolVar(&test, "t", false, "Just do some self-tests")
 	flag.BoolVar(&countSites, "c", false, "Count mutations per site etc.")
@@ -38,39 +78,33 @@ func main() {
 		return
 	}
 
-	nd := NewNucDistro(nil)
-
 	fnames := []string{
-		"ChimericAncestor",
 		"BtSY2",
+		"ChimericAncestor",
 		"BANAL-20-236",
 		"BANAL-20-52",
 		"BANAL-20-103",
 		"RaTG13",
 	}
 
-	genomes := make([]*Genomes, len(fnames))
-	for i := 0; i < len(fnames); i++ {
-		genomes[i] = LoadGenomes(
-			fnames[i]+".fasta",
-			fnames[i]+".orfs",
-		)
-	}
-
-	for i := 0; i < len(genomes); i++ {
-		nd.Count(genomes[i])
-	}
+	genomes := loadGenomes(fnames)
+	nd := findNucDistro(genomes)
 	nd.Show()
 
+	// How many silent muts to apply per genome? If they set 0 that means
+	// "auto" so use the same number as there are between that genome and WH1.
+	mutsPerGenome := findMutsPerGenome(fnames, nMuts)
+
+	// Construct the trial objects
 	spacingTrial := SpacingTrial{
-		func(genome *Genomes, results chan interface{}) {
+		func(genome *Genomes, numMuts int, results chan interface{}) {
 			SpacingTrials(genome, nd, nTrials/nThreads,
-				nMuts, countSites, results)
+				numMuts, countSites, results)
 		}}
 
 	tamperTrial := TamperTrial{
-		func(genome *Genomes, results chan interface{}) {
-			TamperTrials(genome, nd, nTrials/nThreads, nMuts, nEdits, results)
+		func(genome *Genomes, numMuts int, results chan interface{}) {
+			TamperTrials(genome, nd, nTrials/nThreads, numMuts, nEdits, results)
 		}}
 
 	trials := map[string]Trial{
@@ -91,7 +125,7 @@ func main() {
 	results := make(chan interface{}, 1000)
 
 	if trialType == "tamper" {
-		// Write the reference values
+		// Write the reference values into the results file
 		for i := 0; i < len(fnames); i++ {
 			CountSilentInSitesReference(fnames[i], RE_SITES, results)
 		}
@@ -107,7 +141,7 @@ func main() {
 
 		go func() {
 			for j := 0; j < len(genomes); j++ {
-				trial.Run(genomes[j], results)
+				trial.Run(genomes[j], mutsPerGenome[j], results)
 				wg.Done()
 			}
 		}()

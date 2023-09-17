@@ -96,8 +96,8 @@ func CountSilentInSites(genomes *Genomes,
 }
 
 /*
-For each of our alignments of WH1 with various relatives, count the silent
-in sites. We will compare these to the simulated figures
+	For each of our alignments of WH1 with various relatives, count the silent
+	in sites. We will compare these to the simulated figures
 */
 func CountSilentInSitesReference(name string, sites []ReSite,
 	results chan interface{}) {
@@ -106,8 +106,6 @@ func CountSilentInSitesReference(name string, sites []ReSite,
 	// ORFS
 	baseName := fmt.Sprintf("WH1-%s", name)
 	fname := fmt.Sprintf("%s.fasta", baseName)
-
-	fmt.Printf("Considering %s\n", fname)
 	genomes := LoadGenomes(fname, "WH1.orfs")
 
 	var result TamperTrialResult

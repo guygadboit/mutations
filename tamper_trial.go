@@ -7,11 +7,12 @@ import (
 )
 
 type TamperTrial struct {
-	runFunc func(genome *Genomes, results chan interface{})
+	runFunc func(genome *Genomes, numMuts int, results chan interface{})
 }
 
-func (t *TamperTrial) Run(genome *Genomes, results chan interface{}) {
-	t.runFunc(genome, results)
+func (t *TamperTrial) Run(genome *Genomes,
+	numMuts int, results chan interface{}) {
+	t.runFunc(genome, numMuts, results)
 }
 
 func (t *TamperTrial) WriteHeadings(w io.Writer) {
@@ -33,7 +34,8 @@ func TamperTrials(genome *Genomes, nd *NucDistro,
 	numTrials int, numMuts int, numEdits int, results chan interface{}) {
 
 	reportProgress := func(n int) {
-		fmt.Printf("Run %d/%d trials\n", n, numTrials)
+		fmt.Printf("%s (%d muts) %d/%d trials\n",
+			genome.names[0], numMuts, n, numTrials)
 	}
 
 	for i := 0; i < numTrials; i++ {

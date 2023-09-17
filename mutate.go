@@ -70,3 +70,42 @@ mutations:
 	}
 	return numMuts
 }
+
+/*
+	Returns the number of silent and non-silent mutations in an alignment of
+	two genomes. Ignores indels.
+*/
+func CountMutations(genomes *Genomes) (int, int) {
+	var nonSilent, silent int
+	var env Environment
+	a_nts := genomes.nts[0]
+	b_nts := genomes.nts[1]
+	n := genomes.Length()
+
+	for i := 0; i < n; i++ {
+		a := a_nts[i]
+		b := b_nts[i]
+
+		if a == b {
+			continue
+		}
+
+		if a == '-' || b == '-' {
+			continue
+		}
+
+		err := env.Init(genomes, i, 1, 0)
+		if err != nil {
+			// Ignore anything not in an ORF
+			continue
+		}
+		isSilent, _ := env.Replace(b_nts[i : i+1])
+
+		if isSilent {
+			silent++
+		} else {
+			nonSilent++
+		}
+	}
+	return silent, nonSilent
+}
