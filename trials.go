@@ -89,6 +89,14 @@ func main() {
 	resultsWriter := bufio.NewWriter(fd)
 	trial.WriteHeadings(resultsWriter)
 	results := make(chan interface{}, 1000)
+
+	if trialType == "tamper" {
+		// Write the reference values
+		for i := 0; i < len(fnames); i++ {
+			CountSilentInSitesReference(fnames[i], RE_SITES, results)
+		}
+	}
+
 	var wg sync.WaitGroup
 
 	// Cut the work up unto nThreads pieces, all writing their results to a

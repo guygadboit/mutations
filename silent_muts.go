@@ -78,6 +78,14 @@ func CountSilentInSites(genomes *Genomes,
 			}
 		}
 
+		/*
+			first := string(genomes.nts[0][pos:pos+m])
+			second := string(genomes.nts[1][pos:pos+m])
+			fmt.Printf("%s silent mut %s (%s %s) at %d\n", genomes.names[0],
+				string(site.pattern),
+				first, second, pos)
+		*/
+
 		ret.totalMuts += numMuts
 		ret.totalSites++
 		if numMuts == 1 {
@@ -85,4 +93,26 @@ func CountSilentInSites(genomes *Genomes,
 		}
 	}
 	return ret
+}
+
+/*
+For each of our alignments of WH1 with various relatives, count the silent
+in sites. We will compare these to the simulated figures
+*/
+func CountSilentInSitesReference(name string, sites []ReSite,
+	results chan interface{}) {
+
+	// WH1 is the first genome in each of the alignments, so we use its
+	// ORFS
+	baseName := fmt.Sprintf("WH1-%s", name)
+	fname := fmt.Sprintf("%s.fasta", baseName)
+
+	fmt.Printf("Considering %s\n", fname)
+	genomes := LoadGenomes(fname, "WH1.orfs")
+
+	var result TamperTrialResult
+	result.SilentInSites = CountSilentInSites(genomes, RE_SITES, false)
+	result.name = baseName
+
+	results <- &result
 }
