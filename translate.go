@@ -110,7 +110,7 @@ type Orf struct {
 
 type Orfs []Orf
 
-func LoadOrfs(fname string) *Orfs {
+func LoadOrfs(fname string) Orfs {
 	ret := make(Orfs, 0)
 
 	fd, err := os.Open(fname)
@@ -152,7 +152,7 @@ loop:
 		ret = append(ret, Orf{start, end})
 	}
 
-	return &ret
+	return ret
 }
 
 /*
@@ -395,6 +395,40 @@ func (env *Environment) FindAlternatives(maxMuts int) Alternatives {
 
 	sort.Sort(ret)
 	return ret
+}
+
+/*
+	Just translate a whole genome, iterating over all the codons in it from the
+	start
+*/
+type CodonIter struct {
+	genome *Genomes // Alignment of genomes
+	which  int      // Which one you want to translate
+	orfI   int      // Which ORF we're in
+	pos    int      // Where we are in it
+}
+
+func (it *CodonIter) Init(genome *Genomes, which int) {
+	it.genome = genome
+	it.which = which
+	it.pos = genome.orfs[0].start
+}
+
+func (it *CodonIter) Next() (pos int,
+	codon string, aa byte, err error) {
+	genome := it.genome
+	for ; it.orfI < len(genome.orfs); it.orfI++ {
+		orf := genome.orfs[it.orfI]
+		pos = it.pos
+		if pos+3 <= orf.end {
+			codon = string(genome.nts[it.which][pos : pos+3])
+			aa = CodonTable[codon]
+			err = nil
+			it.pos = pos + 3
+			return
+		}
+	}
+	return 0, "", 0, errors.New("No more ORFs")
 }
 
 func init() {

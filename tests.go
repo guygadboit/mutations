@@ -60,10 +60,25 @@ func testCachedSearch(genome *Genomes) {
 	}
 }
 
+func testTranslate(genome *Genomes) {
+	var it CodonIter
+	it.Init(genome, 0)
+
+	for {
+		pos, codon, aa, err := it.Next()
+		if err != nil {
+			break
+		}
+		fmt.Printf("%d: %s %c\n", pos, codon, aa)
+	}
+	fmt.Printf("\n")
+}
+
 func Test() {
 	genome := LoadGenomes("BANAL-20-52.fasta", "BANAL-20-52.orfs")
 	// testCachedSearch(genome)
 	// testMutations(genome)
 	// testAlternatives(genome)
-	testTamper(genome)
+	// testTamper(genome)
+	testTranslate(genome)
 }

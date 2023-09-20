@@ -17,10 +17,10 @@ import (
 type Genomes struct {
 	nts   [][]byte
 	names []string
-	orfs  *Orfs
+	orfs  Orfs
 }
 
-func NewGenomes(orfs *Orfs, numGenomes int) *Genomes {
+func NewGenomes(orfs Orfs, numGenomes int) *Genomes {
 	return &Genomes{make([][]byte, numGenomes),
 		make([]string, numGenomes), orfs}
 }
