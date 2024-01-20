@@ -63,7 +63,8 @@ def make_graph_files(results):
 					print(result.count, result.max_length, file=fp)
 
 
-def rates(results, max_count=None, require_not_interleaved=False):
+def rates(results, max_count=None,
+		  exact_count=None, require_not_interleaved=False):
 	for k, v in results.items():
 		good, total = 0, 0
 		for result in v:
@@ -77,9 +78,11 @@ def rates(results, max_count=None, require_not_interleaved=False):
 			if max_count is not None:
 				acceptable = acceptable and result.count <= max_count
 
+			if exact_count is not None:
+				acceptable = acceptable and result.count == exact_count
+
 			if require_not_interleaved:
 				acceptable = acceptable and not result.interleaved
-
 
 			if acceptable:
 				good += 1
@@ -96,6 +99,7 @@ def main():
 	ap.add_argument("-g", "--graph", action="store_true")
 	ap.add_argument("-r", "--rates", action="store_true", default=True)
 	ap.add_argument("-m", "--max-count", type=int)
+	ap.add_argument("-e", "--exact-count", type=int)
 	ap.add_argument("-i", "--require-not-interleaved", action="store_true")
 
 	args = ap.parse_args()
@@ -107,8 +111,9 @@ def main():
 	if args.graph:
 		make_graph_files(results)
 
-	if args.max_count or args.require_not_interleaved:
-		rates(results, args.max_count, args.require_not_interleaved)
+	if args.max_count or args.exact_count or args.require_not_interleaved:
+		rates(results, args.max_count,
+			args.exact_count, args.require_not_interleaved)
 	elif args.rates:
 		rates(results)
 
