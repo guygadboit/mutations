@@ -355,7 +355,7 @@ func (env *Environment) FindAlternatives(maxMuts int) Alternatives {
 	// The protein stored in env is like LLLRRRIII. We want just LRI.
 	windowLen := len(env.window)
 	protein := make([]byte, windowLen/3)
-	for i := 0; i < len(protein); i++ {
+	for i, _ := range protein {
 		protein[i] = env.protein[i*3]
 	}
 
