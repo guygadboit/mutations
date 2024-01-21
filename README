@@ -71,7 +71,7 @@ The program prints out some status while it's going so you know it's working
 but the results all go into a file called results.txt which should have an
 obvious format.
 
-$ python3 analyze_results.py results.txt
+$ python3 analyse_results.py results.txt
 
 To see the results.
 

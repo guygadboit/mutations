@@ -88,7 +88,7 @@ def rates(results, max_count=None,
 				good += 1
 			total += 1
 
-		print("{}: {}/{} {:.2f}%".format(k, good,
+		print("{}: {}/{} {:.4g}%".format(k, good,
 			total, float(good * 100) / total))
 
 

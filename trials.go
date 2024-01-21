@@ -84,6 +84,7 @@ func main() {
 	}
 
 	fnames := []string{
+		"RpYN06",
 		"BtSY2",
 		"ChimericAncestor",
 		"BANAL-20-236",
