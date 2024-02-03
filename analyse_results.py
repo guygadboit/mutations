@@ -1,4 +1,4 @@
-from scipy.stats import pointbiserialr
+from scipy.stats import pointbiserialr, kstest
 from collections import namedtuple, defaultdict
 from argparse import ArgumentParser
 from pdb import set_trace as brk
@@ -92,6 +92,24 @@ def rates(results, max_count=None,
 			total, float(good * 100) / total))
 
 
+def ks(results):
+	print("Kolmogorov-Smirnov test of uniformity")
+	print("Relative, average p, % of mutants with p >= 0.989")
+	for k, v in results.items():
+		greater = 0
+		total = 0.0
+		for result in v:
+			positions = [float(x) for x
+					in result.positions.strip('[]').split(',')]
+			positions = [x / float(result.genome_len) for x in positions]
+			p = kstest(positions, "uniform").pvalue
+			total += p
+			if p >= 0.989:
+				greater += 1
+		average = total / len(v)
+		print("{} {:.3f} {:.3f}".format(k, average, (greater * 100) / total))
+
+
 def main():
 	ap = ArgumentParser()
 	ap.add_argument("fname", nargs=1)
@@ -116,6 +134,8 @@ def main():
 			args.exact_count, args.require_not_interleaved)
 	elif args.rates:
 		rates(results)
+
+	ks(results)
 
 if __name__ == "__main__":
 	main()

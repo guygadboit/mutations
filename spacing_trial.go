@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"strings"
 )
 
 type SpacingTrial struct {
@@ -17,7 +18,8 @@ func (t *SpacingTrial) Run(genome *Genomes, numMuts int,
 func (t *SpacingTrial) WriteHeadings(w io.Writer) {
 	fmt.Fprintln(w, "# Results from a Spacing Trial")
 	fmt.Fprintln(w, "name count max_length unique acceptable"+
-		" interleaved muts_in_sites total_sites total_singles")
+		" interleaved muts_in_sites total_sites total_singles"+
+		" genome_len positions")
 }
 
 type SpacingTrialResult struct {
@@ -30,20 +32,22 @@ type SpacingTrialResult struct {
 	mutsInSites  int    // Number of silent muts in sites
 	totalSites   int    // Total number of silently mutated sites
 	totalSingles int    // Total number sites silently mutated with 1 mut
+	genomeLen    int    // length of the whole genome
+	positions    []int  // the actual positions of the sites
 }
-
-/*
-func WriteHeadings(w io.Writer) {
-	fmt.Fprintln(w, "name count max_length unique acceptable"+
-		" interleaved muts_in_sites total_sites total_singles")
-}
-*/
 
 func (r *SpacingTrialResult) Write(w io.Writer) {
+
+	strPositions := make([]string, len(r.positions))
+	for i, pos := range r.positions {
+		strPositions[i] = fmt.Sprintf("%d", pos)
+	}
+	positions := "[" + strings.Join(strPositions, ",") + "]"
+
 	fmt.Fprintln(w, r.name,
 		r.count,
 		r.maxLength, r.unique, r.acceptable, r.interleaved,
-		r.mutsInSites, r.totalSites, r.totalSites)
+		r.mutsInSites, r.totalSites, r.totalSites, r.genomeLen, positions)
 }
 
 func SpacingTrials(genome *Genomes, nd *NucDistro,
@@ -51,7 +55,9 @@ func SpacingTrials(genome *Genomes, nd *NucDistro,
 	results chan interface{}) {
 	good := 0
 
-	count, maxLength, unique, interleaved := FindRestrictionMap(genome)
+	count, maxLength, unique, interleaved, positions :=
+		FindRestrictionMap(genome)
+
 	fmt.Printf("Original: %d, %d, %t, %t\n", count,
 		maxLength, unique, interleaved)
 
@@ -63,7 +69,8 @@ func SpacingTrials(genome *Genomes, nd *NucDistro,
 	for i := 0; i < numTrials; i++ {
 		mutant := genome.Clone()
 		MutateSilent(mutant, nd, numMuts)
-		count, maxLength, unique, interleaved = FindRestrictionMap(mutant)
+		count, maxLength, unique, interleaved, positions =
+			FindRestrictionMap(mutant)
 
 		acceptable := unique && maxLength < 8000
 		if acceptable {
@@ -82,7 +89,8 @@ func SpacingTrials(genome *Genomes, nd *NucDistro,
 
 		results <- &SpacingTrialResult{genome.names[0],
 			count, maxLength, unique, acceptable, interleaved,
-			sis.totalMuts, sis.totalSites, sis.totalSites}
+			sis.totalMuts, sis.totalSites,
+			sis.totalSites, genome.Length(), positions}
 
 		if i%100 == 0 {
 			reportProgress(i)

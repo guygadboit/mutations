@@ -5,8 +5,8 @@ import (
 )
 
 /*
-	Introduce num silent mutations into genome (the first one), selecting nts
-	randomly from nucDist. Return the number of mutations
+Introduce num silent mutations into genome (the first one), selecting nts
+randomly from nucDist. Return the number of mutations
 */
 func MutateSilent(genome *Genomes, nucDist *NucDistro, num int) int {
 	numMuts := 0
@@ -72,8 +72,8 @@ mutations:
 }
 
 /*
-	Returns the number of silent and non-silent mutations in an alignment of
-	two genomes. Ignores indels.
+Returns the number of silent and non-silent mutations in an alignment of
+two genomes. Ignores indels.
 */
 func CountMutations(genomes *Genomes) (int, int) {
 	var nonSilent, silent int

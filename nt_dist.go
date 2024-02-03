@@ -47,7 +47,7 @@ func (nd *NucDistro) Show() {
 }
 
 /*
-	Pick a nucleotide randomly from the distribution represented by nd
+Pick a nucleotide randomly from the distribution represented by nd
 */
 func (nd *NucDistro) Random() byte {
 	r := rand.Intn(nd.total)

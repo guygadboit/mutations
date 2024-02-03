@@ -1,7 +1,7 @@
 /*
-	Explore various scoring systems for how suspiciously engineered a genome
-	might look based on whether it has more silent mutations, or more of
-	particular kinds, in the sites of interest rather than outside them.
+Explore various scoring systems for how suspiciously engineered a genome
+might look based on whether it has more silent mutations, or more of
+particular kinds, in the sites of interest rather than outside them.
 */
 package main
 
@@ -19,8 +19,8 @@ func (sis SilentInSites) Show() {
 }
 
 /*
-	Assume there are two aligned genomes in Genomes. Return if they code for
-	the same protein for count nts at pos
+Assume there are two aligned genomes in Genomes. Return if they code for
+the same protein for count nts at pos
 */
 func isSilent(genomes *Genomes, pos int, count int) bool {
 	var aEnv, bEnv Environment
@@ -40,10 +40,10 @@ func isSilent(genomes *Genomes, pos int, count int) bool {
 }
 
 /*
-	Return the total number of mutations in the sites, the number of sites, and
-	the number of sites with only one mutation. If assumeSilent don't bother
-	checking if the mutations were silent (because in our common use case we
-	only introduce silent mutations in the first place, so this saves time)
+Return the total number of mutations in the sites, the number of sites, and
+the number of sites with only one mutation. If assumeSilent don't bother
+checking if the mutations were silent (because in our common use case we
+only introduce silent mutations in the first place, so this saves time)
 */
 func CountSilentInSites(genomes *Genomes,
 	sites []ReSite, assumeSilent bool) SilentInSites {
@@ -96,8 +96,8 @@ func CountSilentInSites(genomes *Genomes,
 }
 
 /*
-	For each of our alignments of WH1 with various relatives, count the silent
-	in sites. We will compare these to the simulated figures
+For each of our alignments of WH1 with various relatives, count the silent
+in sites. We will compare these to the simulated figures
 */
 func CountSilentInSitesReference(name string, sites []ReSite,
 	results chan interface{}) {

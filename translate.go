@@ -156,9 +156,9 @@ loop:
 }
 
 /*
-	Return the start of the codon and where pos is in it. We just do a linear
-	search since there aren't usually that many ORFs and this is probably as
-	fast as anything else
+Return the start of the codon and where pos is in it. We just do a linear
+search since there aren't usually that many ORFs and this is probably as
+fast as anything else
 */
 func (orfs Orfs) GetCodonOffset(pos int) (int, int, error) {
 	for i := 0; i < len(orfs); i++ {
@@ -189,8 +189,8 @@ func ceil3(n int) int {
 }
 
 /*
-	Assume nts are codon aligned and return a translation, with one amino-acid
-	letter per nt, so something like LLLRRRIII
+Assume nts are codon aligned and return a translation, with one amino-acid
+letter per nt, so something like LLLRRRIII
 */
 func TranslateAligned(nts []byte) []byte {
 	ret := make([]byte, len(nts))
@@ -237,8 +237,8 @@ func (env *Environment) Print() {
 }
 
 /*
-	If we were to replace the subsequence this is the environment of, would
-	that be silent, and how many mutations would it contain?
+If we were to replace the subsequence this is the environment of, would
+that be silent, and how many mutations would it contain?
 */
 func (env *Environment) Replace(replacement []byte) (bool, int) {
 	altWindow := make([]byte, len(env.window))
@@ -287,8 +287,8 @@ func (it *altIter) Init(protein []byte) {
 }
 
 /*
-	Return the next alternative and whether there are any more to come after
-	it.
+Return the next alternative and whether there are any more to come after
+it.
 */
 func (it *altIter) Next() ([]byte, bool) {
 	prot := it.protein
@@ -329,8 +329,8 @@ func TestAlternatives() {
 }
 
 /*
-	Newer versions of Go have a more "ergonomic" slices.SortFunc which saves
-	you doing all this.
+Newer versions of Go have a more "ergonomic" slices.SortFunc which saves
+you doing all this.
 */
 func (a Alternatives) Len() int {
 	return len(a)
@@ -345,8 +345,8 @@ func (a Alternatives) Swap(i, j int) {
 }
 
 /*
-	Find the alternative nt sequences that would not change the protein here,
-	ordered by fewest muts first.
+Find the alternative nt sequences that would not change the protein here,
+ordered by fewest muts first.
 */
 func (env *Environment) FindAlternatives(maxMuts int) Alternatives {
 	var it altIter
@@ -398,8 +398,8 @@ func (env *Environment) FindAlternatives(maxMuts int) Alternatives {
 }
 
 /*
-	Just translate a whole genome, iterating over all the codons in it from the
-	start
+Just translate a whole genome, iterating over all the codons in it from the
+start
 */
 type CodonIter struct {
 	genome *Genomes // Alignment of genomes

@@ -6,9 +6,9 @@ import (
 )
 
 /*
-	Add one of the sites in sites somewhere randomly but not in notAt using a
-	maximum of maxMuts mutations. Return where it was added or an error in the
-	unlikely event that it couldn't be.
+Add one of the sites in sites somewhere randomly but not in notAt using a
+maximum of maxMuts mutations. Return where it was added or an error in the
+unlikely event that it couldn't be.
 */
 func AddSite(genome *Genomes, sites []ReSite,
 	notAt map[int]bool, maxMuts int) (int, error) {
@@ -50,8 +50,8 @@ func AddSite(genome *Genomes, sites []ReSite,
 }
 
 /*
-	Remove a site from somewhere random, but not in notAt. Return the position
-	it was removed from.
+Remove a site from somewhere random, but not in notAt. Return the position
+it was removed from.
 */
 func RemoveSite(genome *Genomes,
 	search *CachedSearch, notAt map[int]bool) (int, error) {
@@ -122,8 +122,8 @@ func RemoveSite(genome *Genomes,
 }
 
 /*
-	Try to silently remove the specified numbers of sites. Return the actual number
-	modified
+Try to silently remove the specified numbers of sites. Return the actual number
+modified
 */
 func Tamper(genome *Genomes, sites []ReSite, remove, add int) int {
 	removed := make(map[int]bool)

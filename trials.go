@@ -39,9 +39,9 @@ func findNucDistro(genomes []*Genomes) *NucDistro {
 }
 
 /*
-	Return an array of ints for how many muts to apply, which either numMuts
-	for everything, or the number of silent muts there are between each genome
-	and WH1.
+Return an array of ints for how many muts to apply, which either numMuts
+for everything, or the number of silent muts there are between each genome
+and WH1.
 */
 func findMutsPerGenome(fnames []string, numMuts int) []int {
 	mutsPerGenome := make([]int, len(fnames))

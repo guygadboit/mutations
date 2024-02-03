@@ -17,7 +17,8 @@ func testMutations(genome *Genomes) {
 	for {
 		mutant = genome.Clone()
 		MutateSilent(mutant, nd, 700)
-		count, maxLength, unique, interleaved := FindRestrictionMap(mutant)
+		count, maxLength, unique, interleaved, _ :=
+			FindRestrictionMap(mutant)
 		if unique && maxLength < 8000 {
 			fmt.Println(count, maxLength, unique, interleaved)
 			break

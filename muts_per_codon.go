@@ -7,8 +7,8 @@ type MutsPerCodonResult struct {
 }
 
 /*
-	Given two aligned genomes find how many silent muts they have between them
-	per codon. Ignore non-silent muts
+Given two aligned genomes find how many silent muts they have between them
+per codon. Ignore non-silent muts
 */
 func MutsPerCodon(genome *Genomes, results chan *MutsPerCodonResult) {
 }

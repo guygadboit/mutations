@@ -48,8 +48,8 @@ func (s *CachedSearch) Init(genomes *Genomes, reSites []ReSite) {
 }
 
 /*
-	Returns the position in the nts and the ReSite that matched. If there are
-	multiple genomes we look for matches in any of them.
+Returns the position in the nts and the ReSite that matched. If there are
+multiple genomes we look for matches in any of them.
 */
 func (s *Search) Iter() (int, *ReSite) {
 	genomes := s.genomes

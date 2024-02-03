@@ -10,9 +10,9 @@ import (
 )
 
 /*
-	Represents a collection of aligned genomes (usually two) with one genome
-	per row. The orfs "belong" to the first one in the set. We also use this
-	for a single genome.
+Represents a collection of aligned genomes (usually two) with one genome
+per row. The orfs "belong" to the first one in the set. We also use this
+for a single genome.
 */
 type Genomes struct {
 	nts   [][]byte
@@ -26,9 +26,9 @@ func NewGenomes(orfs Orfs, numGenomes int) *Genomes {
 }
 
 /*
-	Load genomes, which might be a fasta file containing a single genome, or
-	one containing a few of them in an alignment. Be a bit careful when working
-	with alignments since there may be '-' in there
+Load genomes, which might be a fasta file containing a single genome, or
+one containing a few of them in an alignment. Be a bit careful when working
+with alignments since there may be '-' in there
 */
 func LoadGenomes(fname string, orfsName string) *Genomes {
 	ret := NewGenomes(LoadOrfs(orfsName), 0)
@@ -105,8 +105,8 @@ func (g *Genomes) Clone() *Genomes {
 }
 
 /*
-	Assuming align is aligned with g, add it to g's own nts array, just doing a
-	shallow copy
+Assuming align is aligned with g, add it to g's own nts array, just doing a
+shallow copy
 */
 func (g *Genomes) Combine(other *Genomes) {
 	for i := 0; i < other.NumGenomes(); i++ {
@@ -115,8 +115,8 @@ func (g *Genomes) Combine(other *Genomes) {
 }
 
 /*
-	These little functions make it a bit easier not to get confused about
-	which dimension is which.
+These little functions make it a bit easier not to get confused about
+which dimension is which.
 */
 func (g *Genomes) NumGenomes() int {
 	return len(g.nts)
