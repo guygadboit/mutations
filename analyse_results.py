@@ -92,22 +92,42 @@ def rates(results, max_count=None,
 			total, float(good * 100) / total))
 
 
-def ks(results):
-	print("Kolmogorov-Smirnov test of uniformity")
-	print("Relative, average p, % of mutants with p >= 0.989")
+def normalized_positions(result):
+	positions = [float(x) for x in result.positions.strip('[]').split(',')]
+	return [x / float(result.genome_len) for x in positions]
+
+
+def ks(positions):
+	return kstest(positions, "uniform").pvalue
+
+
+def mean_abs_diff(positions):
+	n = len(positions) + 1
+	d = 0
+	for i, pos in enumerate(positions):
+		d += abs(pos - (i+1) / n)
+	return d * 1/(n-1)
+
+
+def check_results(results, test, ref_positions):
+	ref = test(ref_positions)
+	greater = 0
+	total = 0.0
+
+	print("Reference value: {:.3f}".format(ref))
+	print("Starting point, mean value, % greater than reference")
+
 	for k, v in results.items():
 		greater = 0
 		total = 0.0
 		for result in v:
-			positions = [float(x) for x
-					in result.positions.strip('[]').split(',')]
-			positions = [x / float(result.genome_len) for x in positions]
-			p = kstest(positions, "uniform").pvalue
-			total += p
-			if p >= 0.989:
+			positions = normalized_positions(result)
+			val = test(positions)
+			total += val
+			if val > ref:
 				greater += 1
 		average = total / len(v)
-		print("{} {:.3f} {:.3f}".format(k, average, (greater * 100) / total))
+		print("{} {:.3f} {:.3f}%".format(k, average, (greater * 100) / len(v)))
 
 
 def main():
@@ -135,7 +155,14 @@ def main():
 	elif args.rates:
 		rates(results)
 
-	ks(results)
+	WH1 = [0.0733036819048256, 0.32605424204929273,
+		0.57947363140822, 0.6009764906531118, 0.8059726448851285]
+
+	print("Kolomogorov Smirnov")
+	check_results(results, ks, WH1)
+
+	print("Mean Absolute Difference from perfectly uniform")
+	check_results(results, mean_abs_diff, WH1)
 
 if __name__ == "__main__":
 	main()
