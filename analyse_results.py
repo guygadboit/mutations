@@ -136,7 +136,6 @@ def added_removed(results):
 	for k, v in results.items():
 		total_added, total_removed = 0, 0
 		for result in v:
-			brk()
 			total_added += result.added
 			total_removed += result.removed
 
