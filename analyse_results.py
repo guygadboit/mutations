@@ -128,6 +128,24 @@ def check_results(results, test, ref_positions):
 				greater += 1
 		average = total / len(v)
 		print("{} {:.3f} {:.3f}%".format(k, average, (greater * 100) / len(v)))
+	print()
+
+
+def added_removed(results):
+	print("Average numbers of sites added and removed")
+	for k, v in results.items():
+		total_added, total_removed = 0, 0
+		for result in v:
+			brk()
+			total_added += result.added
+			total_removed += result.removed
+
+		n = len(v)
+		added = total_added / n
+		removed = total_removed / n
+		print("{}: {} muts {:.2f} added {:.2f} removed".format(k,
+		   v[0].num_muts, added, removed))
+	print()
 
 
 def main():
@@ -155,6 +173,9 @@ def main():
 	elif args.rates:
 		rates(results)
 
+	print()
+	added_removed(results)
+
 	WH1 = [0.0733036819048256, 0.32605424204929273,
 		0.57947363140822, 0.6009764906531118, 0.8059726448851285]
 
@@ -164,6 +185,6 @@ def main():
 	print("Mean Absolute Difference from perfectly uniform")
 	check_results(results, mean_abs_diff, WH1)
 
+
 if __name__ == "__main__":
 	main()
-
